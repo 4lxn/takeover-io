@@ -55,7 +55,7 @@
 // served by server.js (local), it is the same origin. ?server=… overrides it.
 const params = new URLSearchParams(location.search);
 const ON_RENDER = location.host === 'takeover-io.onrender.com';
-const GAME_URL = ON_RENDER ? 'https://takeover-io.onrender.com' : location.origin;
+const GAME_URL = params.get('game') || 'https://takeover-io.onrender.com';  // the QR always points at the public game
 const API = params.get('server') || (ON_RENDER ? 'https://takeover-io-server.onrender.com' : location.origin);
 const $ = (id) => document.getElementById(id);
 
