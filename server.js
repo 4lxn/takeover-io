@@ -23,9 +23,19 @@ const FILES = {
   '/background.js': ['background.js', 'text/javascript; charset=utf-8'],
   '/menu-bg.js': ['menu-bg.js', 'text/javascript; charset=utf-8'],
   '/takeover-fx.js': ['takeover-fx.js', 'text/javascript; charset=utf-8'],
+  '/lobby.html': ['lobby.html', 'text/html; charset=utf-8'],
 };
 
 const server = http.createServer((req, res) => {
+  // Lobby screen data (who is online), readable from the static site.
+  if (req.url.split('?')[0] === '/lobby') {
+    const snap = G.snapshot(game, null);
+    const names = [];
+    for (const c of clients.values()) if (c.id) { const ai = game.ais.get(c.id); if (ai) names.push(ai.name); }
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-store' })
+      .end(JSON.stringify({ online: names.length, names, phase: snap.phase, roundT: snap.roundT, board: snap.board }));
+    return;
+  }
   const f = FILES[req.url.split('?')[0]];
   if (!f) { res.writeHead(404).end('not found'); return; }
   fs.readFile(path.join(__dirname, f[0]), (err, body) => {
