@@ -34,7 +34,7 @@
     const scene = new T.Scene(), camera = new T.PerspectiveCamera(62, 1, 0.1, 100);
     scene.background = new T.Color(theme.bg);
     scene.fog = new T.FogExp2(theme.bg, 0.05);
-    scene.add(new T.HemisphereLight(0x3a5a9a, 0x05060d, 0.7));
+    scene.add(new T.HemisphereLight(0x3a5a9a, 0x05060d, 1));
     const flash = new T.PointLight(0xff9a2b, 0, 16, 2); // ponytail: one shared light for every big blast
     scene.add(flash);
 
@@ -45,8 +45,18 @@
     scene.add(floor, grid);
 
     // Two rows of racks along the aisle, LEDs on the faces that look into it, a neon trim on top.
+    const rackTex = (() => { // tiny pixel texture: server units separated by dark seams, a few vent dots
+      const g = document.createElement('canvas'), x = g.getContext('2d');
+      g.width = 16; g.height = 32;
+      x.fillStyle = '#222e4a'; x.fillRect(0, 0, 16, 32);
+      x.fillStyle = '#0d1322'; for (let y = 4; y < 32; y += 5) x.fillRect(0, y, 16, 1);
+      x.fillStyle = '#34446a'; for (let y = 1; y < 32; y += 5) x.fillRect(9, y, 5, 1);
+      const t = new T.CanvasTexture(g);
+      t.magFilter = T.NearestFilter;
+      return t;
+    })();
     const SP = 2.4, n = Q.racks, m = new T.Object3D(), c = new T.Color();
-    const racks = new T.InstancedMesh(new T.BoxGeometry(1.2, 3, 2.1), new T.MeshLambertMaterial({ color: 0x141c2e }), n * 2);
+    const racks = new T.InstancedMesh(new T.BoxGeometry(1.2, 3, 2.1), new T.MeshLambertMaterial({ map: rackTex }), n * 2);
     const leds = new T.InstancedMesh(new T.BoxGeometry(0.02, 0.06, 0.14), new T.MeshBasicMaterial(), n * 24);
     const ledZ = [], redUntil = [], LED = [0x4dff7a, 0x4dff7a, 0x3df2ff, 0xffe14d, 0x0c1a14];
     let ri = 0, li = 0;
@@ -61,7 +71,7 @@
     }
     scene.add(racks, leds);
     for (const side of [-1, 1]) {
-      const trim = new T.Mesh(new T.BoxGeometry(0.04, 0.04, n * SP), new T.MeshBasicMaterial({ color: theme.accent }));
+      const trim = new T.Mesh(new T.BoxGeometry(0.04, 0.04, n * SP), new T.MeshBasicMaterial({ color: 0x1a8a99 }));
       trim.position.set(side * 2.6, 3.02, 4 - (n - 1) * SP / 2);
       scene.add(trim);
     }
@@ -112,6 +122,7 @@
         ring: new T.Mesh(new T.RingGeometry(0.85, 1, 32), new T.MeshBasicMaterial({ side: T.DoubleSide, ...additive })),
         halo: glow(0xffffff, 1), vel: new Float32Array(Q.sparks * 3), age: 1, life: 1, n: 0, big: false,
       };
+      b.halo.material.depthTest = false; // a big flash glows over nearby racks instead of being clipped by them
       b.pts.visible = b.ring.visible = b.halo.visible = false;
       scene.add(b.pts, b.ring, b.halo);
       return b;
@@ -174,7 +185,7 @@
         b.pts.geometry.attributes.position.needsUpdate = true;
         b.pts.material.opacity = 1 - k;
         b.ring.scale.setScalar(0.2 + k * (b.big ? 3.5 : 1.2)); b.ring.material.opacity = (1 - k) * 0.8; b.ring.lookAt(camera.position);
-        b.halo.scale.setScalar((b.big ? 4 : 1.4) * (1 - k * 0.6)); b.halo.material.opacity = Math.max(0, 1 - k * 2);
+        b.halo.scale.setScalar((b.big ? 6 : 1.4) * (1 - k * 0.6)); b.halo.material.opacity = Math.max(0, 1 - k * 2);
       }
       for (let k = 0; k < ledZ.length * 0.03; k++) { // blink a few LEDs; ones near a blast flicker red
         const j = (Math.random() * ledZ.length) | 0;

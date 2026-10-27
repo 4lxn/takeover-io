@@ -17,7 +17,7 @@
   img.px { image-rendering: pixelated; }
 
   #menu { position: fixed; inset: 0; display: grid; place-items: center; background: radial-gradient(circle at 50% 40%, #0e1830, var(--bg) 70%); }
-  #menu .box { position: relative; z-index: 1; width: min(440px, 92vw); text-align: center; padding: 28px 24px; }
+  #menu .box { position: relative; z-index: 1; width: min(440px, 92vw); text-align: center; padding: 28px 24px; background: rgba(7,10,18,.72); border-radius: 14px; }
   #menu h1 { margin: 0; font-size: clamp(38px, 9vw, 58px); letter-spacing: -1px; color: var(--accent); text-shadow: 0 0 18px rgba(61,242,255,.55); }
   #menu .tag { opacity: .8; margin: 6px 0 24px; }
   #name { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid #24365c; background: #0b1222; color: var(--text); font: inherit; font-size: 16px; text-align: center; }
@@ -206,6 +206,7 @@
   <div id="skinGrid"></div><button id="skinsDone">Done</button></div></div>
 
 <script src="assets.js"></script>
+<script src="menu-bg.js" defer></script>
 <script src="controls.js"></script>
 <script src="game.js"></script>
 <script src="background.js"></script>
