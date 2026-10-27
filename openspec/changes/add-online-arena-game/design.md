@@ -88,7 +88,7 @@ All numbers live at the top of `game.js`. Starting values, to be tuned by playte
 - **Arena and pickups:** arena 3000×3000; 200 data packets; up to 4 prompt boxes, one every 10 s.
 - **Round:** round 300 s; takeover screen 10 s; reboot 3 s plus 2 s protection.
 - **AI base stats:** HP 100; base speed 220 units/s; base range 380; fire interval 0.5 s; damage 10; regeneration 2 HP/s.
-- **Levels:** XP to the next level = `5 + 4 × level`.
+- **Levels:** XP to go from level L to L+1 = `ceil(6 × 1.25^(L−1))`, so each level costs 25% more than the last (L10 at 158 XP total, L15 at 527). Steep on purpose so late levels and upgrades don't come in a flood.
 - **Upgrades:**
   - Overclock: −12% fire interval per level.
   - Bigger Model: +4 damage per level.

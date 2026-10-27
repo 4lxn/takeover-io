@@ -29,7 +29,7 @@
       diffusion: { name: 'Diffusion', desc: 'Tank. +40% HP, slower. Shots split on hit', hp: 1.4, speed: 0.85, split: 0.4 },
       agent: { name: 'Agent', desc: 'Assassin. Fast, +15% crit, 2 s dash, -25% HP', hp: 0.75, speed: 1.15, crit: 0.15, dashCd: 2 },
     },
-    levelXp: { base: 3, step: 2 },   // XP to go from level L to L+1 = base + step·L (fast, for testing)
+    levelXp: { base: 6, growth: 1.25 }, // XP to go from level L to L+1 = base · growth^(L-1): each level costs 25% more
     xpRate: 1,                       // custom games multiply all XP gains
     augmentEvery: 3,                                   // levels 3, 6, 9… offer augments instead of upgrades
     rarity: { silver: 60, gold: 30, prismatic: 10 },
@@ -79,7 +79,11 @@
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
   // Cumulative XP needed to leave level L (XP per level grows linearly):
-  const xpForLevel = (L) => CONFIG.levelXp.base * L + (CONFIG.levelXp.step * L * (L + 1)) / 2;
+  const xpForLevel = (L) => {
+    let total = 0;
+    for (let i = 1; i <= L; i++) total += Math.ceil(CONFIG.levelXp.base * CONFIG.levelXp.growth ** (i - 1));
+    return total;
+  };
 
   function randomName() {
     return 'Unit-' + String(Math.floor(Math.random() * 100)).padStart(2, '0');
