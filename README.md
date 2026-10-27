@@ -2,6 +2,21 @@
 
 You are a rogue AI inside a datacenter. Collect data, upgrade your model, delete the other AIs, and lead when the 5-minute round ends to take over the datacenter. Play alone against bots or online with strangers.
 
+**Play:** https://takeover-io.onrender.com · **Lobby screen for events:** https://takeover-io.onrender.com/lobby.html
+
+## Screenshots
+
+| | |
+|---|---|
+| ![Menu with classes, difficulty and the animated 3D datacenter](docs/screenshots/01-menu.png) | ![A match: HUD, leaderboard, item slot, prompt boxes and bots](docs/screenshots/02-gameplay.png) |
+| **Menu:** classes, difficulty, custom game, controls and skins over a Three.js datacenter. | **A match:** auto-fire, items, upgrades, the crown on the leader and arrows to prompt boxes. |
+| ![Augment choice cards with rarity](docs/screenshots/03-augment-cards.png) | ![SHUTDOWN announcement, kill reward popup and explosion](docs/screenshots/04-shutdown-explosion.png) |
+| **Augments** every 3rd level: silver, gold or prismatic, build-defining picks. | **Game feel:** SHUTDOWN banner, +XP reward, explosion, damage numbers and corrupted-data debris. |
+| ![Kernel-panic reboot screen with a tip](docs/screenshots/05-reboot-screen.png) | ![End-of-round takeover screen with the winner and podium](docs/screenshots/06-takeover.png) |
+| **Deleted:** a kernel-panic reboot screen with a progress bar and a gameplay tip. | **Takeover:** the round winner, the podium and the countdown to the next round. |
+| ![Lobby screen with a QR code and live player list](docs/screenshots/07-lobby.png) | <img src="docs/screenshots/08-phone-portrait.png" alt="Phone in portrait: joystick, Dash and Item buttons, stacked upgrade cards" width="280"> |
+| **Lobby** for live events: a QR to join, players appearing as they connect. | **Phones:** a floating joystick, thumb buttons and stacked upgrade cards. |
+
 ## Run locally
 
 ```sh
