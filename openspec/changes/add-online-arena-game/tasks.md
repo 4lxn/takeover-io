@@ -58,6 +58,7 @@ Time budget: under 3 hours, in this order so a playable game exists as early as 
 - [x] 9.2 In `game.js`, add ARAM-Mayhem-style augments every 3rd level with silver, gold and prismatic rarity and the 11 augment effects; verify with test 9.2
 - [x] 9.3 In `game.js`, add the dash with i-frames, the perfect-dodge cooldown refund and focus targeting, plus their input validation; verify with test 9.3
 - [x] 9.4 In the client, add damage and crit numbers, the "+N" kill popup, the announcer banner, explosions with camera shake and kick, hit sparks, bullet trails, the corrupted-data dissolution and kernel-panic reboot overlay with reassembly, the low-health vignette, rarity-colored augment cards, the dash button and cooldown ring, the focus reticle and the streak bounty aura; verify each in Chrome in single player
+- [x] 9.5 Multi-touch joystick, action buttons and mobile layout; verify with synthetic multi-touch in Chrome
 
 ## Workflow follow-up
 

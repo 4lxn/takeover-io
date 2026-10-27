@@ -65,3 +65,19 @@ During a match, the player SHALL be able to leave to the start menu; leaving mul
 #### Scenario: Leave a match
 - **WHEN** the player presses the Menu button or key Q during a match
 - **THEN** the match view closes and the start menu appears, keeping the nickname
+
+### Requirement: Touch controls
+
+On phones and tablets, each finger SHALL be tracked separately. In joystick mode (the default), the first touch on the left part of the screen SHALL become a floating joystick that moves the AI, while big Dash and Item buttons on the right fire instantly; a tap on an enemy SHALL focus it. A Controls setting SHALL switch to follow mode, where the first finger steers like the mouse.
+
+#### Scenario: Joystick and dash at once
+- **WHEN** the player holds the joystick with the left thumb and taps Dash with the right thumb
+- **THEN** the AI dashes while the joystick keeps steering it
+
+#### Scenario: Tap to focus
+- **WHEN** the player, holding the joystick, taps an enemy AI with another finger
+- **THEN** that enemy becomes the focus target and the joystick is not interrupted
+
+#### Scenario: Follow mode
+- **WHEN** the player switches touch movement to "Follow finger" in Controls and touches the screen
+- **THEN** the AI moves toward that finger, and a second finger does not take over steering
