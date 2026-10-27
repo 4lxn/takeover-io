@@ -1413,7 +1413,34 @@ function drawPanic(view, now, dt) {
   ctx.fillStyle = '#3df2ff'; ctx.fillRect(bx + 3, by + 3, (bw - 6) * (pct / 100), 12);
   ctx.font = `700 15px ui-monospace, Menlo, monospace`;
   ctx.fillStyle = THEME.text; ctx.fillText(`REBOOTING… ${String(pct).padStart(2, '0')}%`, W / 2, by + 42);
+  // one tip per deletion, wrapped under the progress bar
+  if (!S.panic.tip) S.panic.tip = TIPS[Math.floor(Math.random() * TIPS.length)]();
+  ctx.font = `700 13px ui-monospace, Menlo, monospace`;
+  ctx.fillStyle = '#ffe14d'; ctx.fillText('TIP', W / 2, by + 78);
+  ctx.font = `14px ui-monospace, Menlo, monospace`;
+  ctx.fillStyle = THEME.text;
+  let line = '', ly = by + 100;
+  for (const word of S.panic.tip.split(' ')) {
+    if (ctx.measureText(line + word).width > bw && line) { ctx.fillText(line.trim(), W / 2, ly); line = ''; ly += 20; }
+    line += word + ' ';
+  }
+  ctx.fillText(line.trim(), W / 2, ly);
 }
+const keyName = (action, fallback) => (window.Controls ? Controls.label(action) : fallback);
+const TIPS = [
+  () => `Dash (${keyName('dash', 'Shift')}) through incoming shots: a PERFECT DODGE resets the dash cooldown.`,
+  () => (touchScreen ? 'Tap an enemy' : 'Click an enemy') + ' to focus your fire on it. Finish off low-HP targets first.',
+  () => 'Every 3rd level is an AUGMENT. Prismatic ones can change your whole build.',
+  () => 'Prompt boxes (>_) give items. Follow the yellow arrows at the edge of the screen.',
+  () => 'Session Limit freezes a target for 2.5 s: throw it, then unload your shots.',
+  () => 'Delete an AI on a streak of 3 or more for a SHUTDOWN bounty.',
+  () => 'Bigger AIs are easier to hit. Low Latency and Context Window help you kite.',
+  () => 'Firewall blocks damage and thrown items. Save it for when you are being chased.',
+  () => 'Prompt Injection steals 25% of a target\'s XP. Aim it at the leader.',
+  () => 'Alignment shortens Hallucination and Session Limit on you.',
+  () => 'Your score is your XP right now: getting deleted late in the round costs the most.',
+  () => 'Diffusion shots split on hit (great in crowds). Agents dash every 2 seconds.',
+];
 
 // ---------- HUD (DOM, text only: names never become HTML) ----------
 const hudCache = {};
