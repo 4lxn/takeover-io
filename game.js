@@ -29,7 +29,7 @@
       diffusion: { name: 'Diffusion', desc: 'Tank. +40% HP, slower. Shots split on hit', hp: 1.4, speed: 0.85, split: 0.4 },
       agent: { name: 'Agent', desc: 'Assassin. Fast, +15% crit, 2 s dash, -25% HP', hp: 0.75, speed: 1.15, crit: 0.15, dashCd: 2 },
     },
-    levelXp: { base: 12, growth: 1.35 }, // XP to go from level L to L+1 = base · growth^(L-1): each level costs 35% more
+    levelXp: { base: 14, growth: 1.4 }, // XP to go from level L to L+1 = base · growth^(L-1): each level costs 40% more
     xpRate: 1,                       // custom games multiply all XP gains
     // Single-player bot difficulty. aimJitter: radians of random aim error; fire/speed: multipliers;
     // itemUse: chance per tick to use a ready item; dodge: chance per tick to dash away from an incoming shot.

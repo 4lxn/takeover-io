@@ -1,0 +1,16 @@
+<section id="stack" data-transition="fade" style="background:#0c1528;color:#d8e6ff;font-family:'JetBrains Mono', 'Courier New', monospace;padding:128px;display:flex;flex-direction:column;gap:48px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-size:24px;letter-spacing:4px;text-transform:uppercase;color:#3df2ff;font-weight:700">Under the hood</p>
+<h2 style="font-family:'Press Start 2P', 'Courier New', monospace;font-size:56px;font-weight:400;line-height:1.3;color:#d8e6ff">Plain JS, one arena</h2>
+</div>
+<table style="font-size:28px;color:#d8e6ff;font-family:'JetBrains Mono', 'Courier New', monospace">
+<tr><th style="width:24%;color:#3df2ff">Layer</th><th style="width:76%;color:#3df2ff">What it is</th></tr>
+<tr><td>Client</td><td>Plain JavaScript and Canvas 2D, no build step</td></tr>
+<tr><td>Simulation</td><td>One game.js, shared by the browser and the server</td></tr>
+<tr><td>Single player</td><td>Runs in the browser against 7 bots</td></tr>
+<tr><td>Multiplayer</td><td>Node.js + ws: one arena, up to 20 people, bots fill it to 8 AIs</td></tr>
+<tr><td>Hosting</td><td>Render</td></tr>
+<tr><td>Tests</td><td>Simulation rules under node --test; load test at 100 players: [result]</td></tr>
+</table>
+<aside>Deliberately boring tech. The same simulation file runs in the browser for single player and on the server for multiplayer, so the rules can’t drift apart. Fill in the load-test result before presenting.</aside>
+</section>

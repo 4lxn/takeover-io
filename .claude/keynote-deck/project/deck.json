@@ -1,0 +1,20 @@
+{
+  "v": 4,
+  "createdOnFiles": { "v": 1, "at": "2026-10-26T20:30:00Z" },
+  "lists": "css",
+  "title": "takeover.io keynote",
+  "cover": "cover",
+  "order": ["cover", "pitch", "round", "gameplay", "items", "upgrades", "classes", "skins", "kb31", "artastext", "screens", "stack", "built", "close"],
+  "sections": {
+    "intro": { "description": "What takeover.io is, in one sentence.", "start": "cover" },
+    "play": { "description": "How a round plays: items, upgrades, classes and skins.", "start": "round" },
+    "craft": { "description": "How the art, sound and screens are made.", "start": "kb31" },
+    "build": { "description": "The tech stack and how two Claude Code sessions built it.", "start": "stack" },
+    "end": { "description": "Where to play.", "start": "close" }
+  },
+  "faces": {
+    "press-start-2p": { "family": "Press Start 2P", "href": "https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" },
+    "jetbrains-mono": { "family": "JetBrains Mono", "href": "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" }
+  },
+  "designSystems": []
+}
