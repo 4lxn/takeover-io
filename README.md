@@ -45,3 +45,16 @@ To test multiplayer locally, open the same URL in two browser tabs.
 | `game.test.js` | rule tests |
 
 Gameplay numbers (speeds, damage, round length, item durations) all live in `CONFIG` at the top of `game.js`.
+
+## Deploy (Render, free)
+
+Two free Render services built from this repository, both redeployed on every push to `main`:
+
+| Service | Type | URL | What |
+|---|---|---|---|
+| `takeover-io` | static site | https://takeover-io.onrender.com | the game client (always on, CDN) |
+| `takeover-io-server` | web service (Node) | https://takeover-io-server.onrender.com | the multiplayer WebSocket server |
+
+- The static site's build command points the client at the server by rewriting `WS_URL` in `index.html` to `wss://takeover-io-server.onrender.com`. Locally `WS_URL` stays empty, so the client uses the same origin.
+- The free web service sleeps after about 15 minutes idle. The first multiplayer join then waits about a minute ("Waking up the datacenter…"); single player is never affected.
+- `render.yaml` describes the same two services as a Blueprint (New → Blueprint), to recreate them in another account.

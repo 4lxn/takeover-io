@@ -43,10 +43,10 @@ Time budget: under 3 hours, in this order so a playable game exists as early as 
 
 ## 7. Deploy (~20 min, needs the user)
 
-- [ ] 7.1 Create a GitHub repository and push (ask the user first: this publishes the code); verify the repository page shows the files
-- [ ] 7.2 Create a free Render web service (`npm install`, `npm start`), confirming the free-tier limits on render.com first; verify a browser can open the WebSocket at the service URL
+- [x] 7.1 Create a GitHub repository and push (ask the user first: this publishes the code); verify the repository page shows the files
+- [x] 7.2 Create a free Render web service (`npm install`, `npm start`), confirming the free-tier limits on render.com first; verify a browser can open the WebSocket at the service URL
 - [ ] 7.3 Create a free Render static site for `index.html`, `game.js` and `assets.js`, and set `WS_URL` to the web service; verify single player loads instantly and multiplayer works between a phone and a laptop
-- [ ] 7.4 Add a "Deploy" section to `README.md` with the two Render services and `WS_URL`; verify it matches what was configured
+- [x] 7.4 Add a "Deploy" section to `README.md` with the two Render services and `WS_URL`; verify it matches what was configured
 
 ## 8. Integration check (~15 min)
 

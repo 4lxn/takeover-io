@@ -1,8 +1,13 @@
 // takeover.io assets: palette-mapped pixel art, WebAudio sfx recipes, one chiptune loop.
 (function () {
-  // AI core: visor eye scans left -> center -> right -> center. `pos` = dark cells left of the eye.
+  // Visor row with the eye `pos` cells from the left. Idle frames scan left -> center -> right -> center.
+  const scan = pos => 'KTK' + 'd'.repeat(pos) + 'WW' + 'd'.repeat(8 - pos) + 'KTK';
+  const EYE = [1, 4, 7, 4];
+  const scanFrames = (rows, visorRows) => EYE.map(pos => rows.map((r, y) => (visorRows.includes(y) ? scan(pos) : r)));
+
+  // AI core (also the transformer class body).
   const ai = pos => {
-    const visor = 'KTK' + 'd'.repeat(pos) + 'WW' + 'd'.repeat(8 - pos) + 'KTK';
+    const visor = scan(pos);
     return [
       '.....KKKKKK.....',
       '...KKTTTTTTKK...',
@@ -208,6 +213,77 @@
     [[6, 13], [5, 14], [4, 15], [4, 16], [5, 17], [6, 18]].forEach(([x, y]) => { px(x, y, 'c'); px(31 - x, y, 'c'); });
   });
 
+  // Class bodies. Diffusion: bulky armored octagon. Agent: small diamond with a one-row slit visor.
+  const diffusionAi = scanFrames([
+    '...KKKKKKKKKK...',
+    '..KTTTTTTTTTTK..',
+    '.KTWTTTTTTTTTTK.',
+    'KTWTTTTTTTTTTTTK',
+    'KTTTTTTTTTTTTTTK',
+    'KTKKKKKKKKKKKKTK',
+    '',
+    '',
+    'KTKKKKKKKKKKKKTK',
+    'KTTTTTTTTTTTTTTK',
+    'KTgTTTTTTTTTTgTK',
+    'KTTTTTTTTTTTTTTK',
+    'KTTTTTTTTTTTTTTK',
+    '.KTddddddddddTK.',
+    '..KTTTTTTTTTTK..',
+    '...KKKKKKKKKK...',
+  ], [6, 7]);
+  const agentAi = scanFrames([
+    '.......KK.......',
+    '......KTTK......',
+    '.....KTWTTK.....',
+    '....KTWTTTTK....',
+    '...KTTTTTTTTK...',
+    '..KTTTTTTTTTTK..',
+    '.KTKKKKKKKKKKTK.',
+    '',
+    '.KTKKKKKKKKKKTK.',
+    '..KTTTTTTTTTTK..',
+    '...KTTTTTTTTK...',
+    '....KTTTTTTK....',
+    '.....KTTTTK.....',
+    '......KTTK......',
+    '.......KK.......',
+    '................',
+  ], [7]);
+
+  // Skins: the ai silhouette recolored. The eye turns 'T' so the player's color stays visible.
+  // map: { T: body, S: body from row 11 down, K/d: outline/visor overrides }. over(x, y, ch) may return a pixel.
+  const skin = (name, tier, map, over = () => null) => ({
+    name, tier, fps: 4,
+    frames: EYE.map(pos => ai(pos).map((row, y) => [...row].map((ch, x) => {
+      const o = over(x, y, ch);
+      if (o) return o;
+      if ((y === 7 || y === 8) && ch === 'W') return 'T';
+      if (ch === 'T') return y >= 11 && map.S ? map.S : map.T;
+      return map[ch] || ch;
+    }).join(''))),
+  });
+  const plus = (x, y, cx, cy) => Math.abs(x - cx) + Math.abs(y - cy) <= 1;
+  const rowsOver = rows => (x, y) => (rows[y] && rows[y][x] !== '.' ? rows[y][x] : null);
+
+  // Thrown items in flight: 8x8 spinning orbs, no rotation needed.
+  const orb = (fill, rim, n, mark) => Array.from({ length: n }, (_, f) => grid(8, (x, y, d) => {
+    if (d >= 3.6) return null;
+    const turn = ((Math.atan2(y - 3.5, x - 3.5) / (2 * Math.PI) + 1) * 4 + f) % 4; // quadrant, rotated per frame
+    return mark(x, y, d, f, turn) || (d >= 2.6 ? rim : fill);
+  }));
+
+  const CROWN = [
+    'W....WW....W',
+    'Y....YY....Y',
+    'YY...YY...YY',
+    'YYY.YYYY.YYY',
+    'YYYYYYYYYYYY',
+    'YRYYYCCYYYRY',
+    'YYYYYYYYYYYY',
+    'yyyyyyyyyyyy',
+  ];
+
   // Logo: 5x7 pixel font. TAKEOVER in cyan with a dark purple drop shadow, .IO in magenta with a dark cyan one.
   const FONT = {
     T: ['#####', '..#..', '..#..', '..#..', '..#..', '..#..', '..#..'],
@@ -263,6 +339,18 @@
       g: '#5a6b82',
       d: '#232b3d', // dark panel
       n: '#0e1524', // floor decor base
+      // skin colors
+      a: '#e07a52', // coral
+      A: '#a8492c', // dark coral
+      o: '#eef1f6', // off-white
+      b: '#2456c9', // deep blue
+      L: '#7fb0ff', // light blue
+      v: '#8a5cf6', // violet
+      V: '#c4a8ff', // light violet
+      q: '#2a1650', // dark purple glass
+      l: '#d9b8ff', // lavender neon
+      i: '#f3e7c8', // cream
+      h: '#c9a46b', // tan
       C: '#3df2ff',
       c: '#1a8a99',
       G: '#4dff7a',
@@ -544,6 +632,56 @@
       },
 
       logo: still(logo), // 64x12
+
+      // Default body per class, 16x16 with 'T', same format as ai. A chosen skin replaces it.
+      classAi: {
+        transformer: { frames: EYE.map(ai), fps: 4 },
+        diffusion: { frames: diffusionAi, fps: 4 },
+        agent: { frames: agentAi, fps: 4 },
+      },
+
+      thrown: {
+        hallucination: { frames: orb('p', 'P', 4, (x, y, d, f, turn) => (d < 1 ? 'W' : d < 2.6 && turn < 1 ? 'M' : null)), fps: 12 },
+        sessionLimit: {
+          frames: orb('c', 'C', 2, (x, y, d, f) =>
+            d < 2.6 && (f ? Math.abs(x - 3.5) === Math.abs(y - 3.5) : x === 3 || x === 4 || y === 3 || y === 4) ? 'W' : null),
+          fps: 6,
+        },
+        promptInjection: { frames: orb('e', 'G', 4, (x, y, d, f, turn) => (d < 1 ? 'W' : d >= 2.6 && turn < 1 ? 'W' : null)), fps: 12 },
+      },
+
+      // 12x8, drawn above the #1 AI. A glint runs across, then a pause frame.
+      crown: {
+        frames: [0, 1, 2, 3].map(f => CROWN.map((r, y) => (f < 3 && y === 4 ? r.slice(0, 2 + 4 * f) + 'W' + r.slice(3 + 4 * f) : r))),
+        fps: 6,
+      },
+    },
+
+    // Homage skins: fictional names, colors and motifs only, no logos. Unlocked by lifetime XP;
+    // tier 1..9 is the unlock order, the client maps tiers to XP thresholds.
+    skins: {
+      coralTerminal: skin('Coral Terminal', 1, { T: 'a', S: 'A' }, rowsOver({
+        11: '.....W..........',
+        12: '.....AWAA.A.....',
+        13: '.....W.WWW......',
+      })),
+      monolith: skin('Monolith', 2, { T: 'o', S: 'w', d: 'K' }),
+      deepDiver: skin('Deep Diver', 3, { T: 'b', S: 'L' }, rowsOver({
+        0: '.............L..',
+        1: '..............L.',
+        2: '.............L..',
+      })),
+      violetPrism: skin('Violet Prism', 4, { T: 'v', S: 'p' }, (x, y, ch) => (ch === 'T' && (x + y) % 5 === 0 ? 'V' : null)),
+      tradewind: skin('Tradewind', 5, { T: 'Y' }, (x, y, ch) => (ch === 'T' ? ((y >> 1) % 2 ? 'O' : 'Y') : null)),
+      twinStar: skin('Twin Star', 6, { T: 'B' }, (x, y, ch) =>
+        plus(x, y, 5, 3) || plus(x, y, 11, 11) ? 'W' : ch === 'T' && x >= 8 ? 'P' : null),
+      woolly: skin('Woolly', 7, { T: 'i', S: 'h' }, (x, y, ch) =>
+        rowsOver({ 0: '...Kh......hK...' })(x, y) || (ch === 'T' && (x + 2 * y) % 4 === 0 ? 'h' : null)),
+      argon: skin('Argon', 8, { T: 'q', K: 'l' }),
+      overlord: skin('Overlord', 9, { T: 'Y', S: 'y', d: 'r' }, rowsOver({
+        0: '.....Y.YY.Y.....',
+        1: '.......RR.......',
+      })),
     },
 
     // One-shot (loop: false) or looping effects, drawn centered on the target. Same grid format as sprites.
