@@ -781,6 +781,9 @@
       },
     },
 
+    // 5x7 pixel font used by the logo ('#' = pixel). Letters: T A K E O V R I and '.'.
+    font: FONT,
+
     decor: {
       serverRack: still(serverRack),
       coolingVent: still(coolingVent),

@@ -22,6 +22,7 @@ const FILES = {
   '/controls.js': ['controls.js', 'text/javascript; charset=utf-8'],
   '/background.js': ['background.js', 'text/javascript; charset=utf-8'],
   '/menu-bg.js': ['menu-bg.js', 'text/javascript; charset=utf-8'],
+  '/takeover-fx.js': ['takeover-fx.js', 'text/javascript; charset=utf-8'],
 };
 
 const server = http.createServer((req, res) => {

@@ -497,7 +497,7 @@
   function endRound(g) {
     const ranked = [...g.ais.values()].sort((a, b) => b.xp - a.xp || b.kills - a.kills);
     g.winner = ranked[0] ? ranked[0].name : null;
-    g.top3 = ranked.slice(0, 3).map((a) => ({ name: a.name, xp: a.xp, kills: a.kills }));
+    g.top3 = ranked.slice(0, 3).map((a) => ({ name: a.name, xp: a.xp, kills: a.kills, c: a.color, cl: a.cls, sk: a.skin }));
     g.phase = 'takeover';
     g.takeoverT = CONFIG.takeover;
     g.events.push({ e: 'takeover', winner: g.winner });

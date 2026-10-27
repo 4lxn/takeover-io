@@ -74,6 +74,10 @@
   #item.has { border-color: #ffe14d; }
   #msg { position: fixed; top: 38%; left: 50%; transform: translate(-50%, -50%); font-size: 22px; font-weight: 700; text-align: center; text-shadow: 0 0 10px #000; pointer-events: none; }
   #takeover { position: fixed; inset: 0; display: grid; place-items: center; background: rgba(4, 6, 12, .72); text-align: center; pointer-events: none; }
+  /* during the end-of-round animation the HUD steps aside; #takeover text stays for screen readers */
+  body.inTakeover #cards, body.inTakeover #badge, body.inTakeover #item, body.inTakeover #dash, body.inTakeover #topLeft,
+  body.inTakeover #feed, body.inTakeover #msg, body.inTakeover #topRight { visibility: hidden; }
+  #takeover.sr { position: fixed; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
   #takeover h2 { margin: 0; font-size: clamp(26px, 6vw, 48px); color: var(--danger); text-shadow: 0 0 20px rgba(255,59,78,.6); }
   #takeover p { margin: 6px 0; }
   #augs { margin-top: 6px; display: grid; gap: 1px; font-size: 12px; font-weight: 700; }
@@ -199,7 +203,7 @@
   <button id="dash"><span id="dashLbl">Shift</span></button>
   <div id="announce" hidden><div class="at"></div><div class="an"></div></div>
   <div id="msg"></div>
-  <div id="takeover" hidden><div><h2 id="toTitle"></h2><div id="toTop"></div><p id="toNext"></p></div></div>
+  <div id="takeover" hidden aria-live="polite"><div><h2 id="toTitle"></h2><div id="toTop"></div><p id="toNext"></p></div></div>
 </div>
 
 <div id="skinsModal" hidden><div class="panel2"><h2>Skins</h2><div id="skinInfo"></div><div class="xpbar2"><div id="skinBar"></div></div>
@@ -207,6 +211,7 @@
 
 <script src="assets.js"></script>
 <script src="menu-bg.js" defer></script>
+<script src="takeover-fx.js" defer></script>
 <script src="controls.js"></script>
 <script src="game.js"></script>
 <script src="background.js"></script>
@@ -589,6 +594,8 @@ function toMenu(message) {
   const ws = S.ws;
   S.sid++;
   S.mode = null; S.ws = null; S.game = null; S.cur = null; S.connecting = false; S.panic = null;
+  if (window.TakeoverFX) TakeoverFX.stop();
+  S.inTakeover = false; document.body.classList.remove('inTakeover'); $('takeover').classList.remove('sr');
   if (ws) { ws.onclose = null; ws.close(); }
   musicStop();
   clearInterval(S.keepAlive); S.keepAlive = null;
@@ -1332,6 +1339,7 @@ function render(view, now, dt) {
   ctx.globalAlpha = 1;
 
   if (me) S.myScreen = { x: W / 2 + (me.x - cx) * scale, y: H / 2 + (me.y - cy) * scale, r: me.r * scale };
+  S.cam = { cx, cy, scale };
 
   // slice tears where AIs were deleted (screen space)
   if (S.slices && S.slices.length) {
@@ -1594,6 +1602,27 @@ function updateHud(view, now) {
 
   const to = view.phase === 'takeover';
   $('takeover').hidden = !to;
+  if (to !== !!S.inTakeover) {
+    S.inTakeover = to;
+    document.body.classList.toggle('inTakeover', to);
+    const fx = window.TakeoverFX;
+    $('takeover').classList.toggle('sr', to && !!fx);
+    if (to && fx) {
+      const color = (c) => COLORS[(c || 0) % COLORS.length];
+      const framesOf = (r) => {
+        const d = (r.sk && A.skins && A.skins[r.sk]) || (r.cl && A.sprites && A.sprites.classAi && A.sprites.classAi[r.cl]) || (A.sprites && A.sprites.ai);
+        return d ? d.frames : null;
+      };
+      const w = view.top3[0] || { name: view.winner };
+      const wa = view.ais.find((a) => a.n === view.winner && typeof a.id === 'number');
+      const origin = wa && S.cam ? { x: W / 2 + (wa.x - S.cam.cx) * S.cam.scale, y: H / 2 + (wa.y - S.cam.cy) * S.cam.scale } : undefined;
+      try {
+        fx.play({ name: view.winner || 'nobody', color: color(w.c), frames: framesOf(w), fps: 4,
+          top: view.top3.map((r) => ({ name: r.name, xp: r.xp, kills: r.kills, color: color(r.c) })),
+          seconds: G.CONFIG.takeover, origin });
+      } catch (e) { $('takeover').classList.remove('sr'); }
+    } else if (!to && fx) fx.stop();
+  }
   if (to) {
     setText('toTitle', `TAKEOVER: ${view.winner || 'nobody'} controls the datacenter`);
     const top = $('toTop');
