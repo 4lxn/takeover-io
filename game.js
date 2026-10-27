@@ -29,7 +29,7 @@
       diffusion: { name: 'Diffusion', desc: 'Tank. +40% HP, slower. Shots split on hit', hp: 1.4, speed: 0.85, split: 0.4 },
       agent: { name: 'Agent', desc: 'Assassin. Fast, +15% crit, 2 s dash, -25% HP', hp: 0.75, speed: 1.15, crit: 0.15, dashCd: 2 },
     },
-    levelXp: { base: 10, growth: 1.3 }, // XP to go from level L to L+1 = base · growth^(L-1): each level costs 30% more
+    levelXp: { base: 12, growth: 1.35 }, // XP to go from level L to L+1 = base · growth^(L-1): each level costs 35% more
     xpRate: 1,                       // custom games multiply all XP gains
     // Single-player bot difficulty. aimJitter: radians of random aim error; fire/speed: multipliers;
     // itemUse: chance per tick to use a ready item; dodge: chance per tick to dash away from an incoming shot.
@@ -444,9 +444,10 @@
     const valid = killer && killer !== v && g.ais.has(killer.id) && !killer.dead;
     let gain = 0, shutdown = 0;
     if (valid) {
-      gain = CONFIG.killBase + half;
-      if (v.streak >= 3) { gain += CONFIG.bountyPerStreak * v.streak; shutdown = 1; }
-      if (killer.aug.bountyHunter) gain *= 2;
+      let bonus = CONFIG.killBase;
+      if (v.streak >= 3) { bonus += CONFIG.bountyPerStreak * v.streak; shutdown = 1; }
+      if (killer.aug.bountyHunter) bonus *= 2;  // doubles the bonus, never the XP taken from the victim
+      gain = bonus + half;
       addXp(g, killer, gain);
       killer.kills++; killer.streak++;
       killer.multi = killer.multiT > 0 ? killer.multi + 1 : 1;
@@ -691,7 +692,8 @@
       for (const p of g.packets.values()) {
         if (dist2(ai, p) <= rp) {
           removePacket(g, p);
-          ai.xpFrac += (ai.aug.dataHoarder ? p.v * 2 : p.v) * (CLASSES[ai.cls].dataXp || 1);
+          // bonuses only apply to the map's own data; dropped XP is recycled 1:1 (otherwise every death inflates XP)
+          ai.xpFrac += p.natural ? (ai.aug.dataHoarder ? p.v * 2 : p.v) * (CLASSES[ai.cls].dataXp || 1) : p.v;
           const whole = Math.floor(ai.xpFrac);
           ai.xpFrac -= whole;
           addXp(g, ai, whole);
