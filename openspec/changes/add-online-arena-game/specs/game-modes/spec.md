@@ -55,7 +55,7 @@ Multiplayer SHALL connect to the game server and place the player's AI in the on
 - **THEN** the game shows "Waking up the datacenter…" until the connection opens, then joins the arena
 
 #### Scenario: Server unreachable
-- **WHEN** the connection cannot be opened after 90 seconds or is refused
+- **WHEN** the connection keeps failing or being refused for 90 seconds (it retries every 2 seconds meanwhile, because a sleeping server refuses connections while it wakes)
 - **THEN** the game returns to the start menu with a message suggesting Single player
 
 ### Requirement: Return to menu

@@ -10,6 +10,9 @@
   button { background: #122038; color: #d8e6ff; border: 1px solid #24365c; font: inherit; padding: 4px 8px; cursor: pointer; }
 </style>
 <h2>ai (10 tints)</h2><div class="row" id="ais"></div>
+<h2>class bodies</h2><div class="row" id="classAi"></div>
+<h2>skins (tier: name, eye = player color)</h2><div class="row" id="skins"></div>
+<h2>thrown items + crown</h2><div class="row" id="thrown"></div>
 <h2>sprites</h2><div class="row" id="sprites"></div>
 <h2>items</h2><div class="row" id="items"></div>
 <h2>upgrades</h2><div class="row" id="upgrades"></div>
@@ -18,7 +21,7 @@
 <h2>decor (on the arena bg)</h2><div class="row" id="decor"></div>
 <h2>logo</h2><div class="row" id="logo"></div>
 <h2>sfx</h2><div class="row" id="sfx"></div>
-<h2>music</h2><div class="row"><button id="music">play music</button><button id="fast">play fast (x1.25)</button></div>
+<h2>music</h2><div class="row"><button id="music">play music</button><button id="fast">play fast (x1.25)</button><button id="menu">play menu music</button></div>
 <script src="assets.js"></script>
 <script>
   const A = window.ASSETS, SCALE = 4, anims = [];
@@ -41,6 +44,10 @@
   }
 
   A.playerColors.forEach(c => add('ais', c, A.sprites.ai, { tint: c }));
+  Object.keys(A.sprites.classAi).forEach((k, i) => add('classAi', k, A.sprites.classAi[k], { tint: A.playerColors[i] }));
+  Object.values(A.skins).forEach((s, i) => add('skins', `${s.tier}: ${s.name}`, s, { tint: A.playerColors[i % 10] }));
+  for (const k in A.sprites.thrown) add('thrown', k, A.sprites.thrown[k]);
+  add('thrown', 'crown', A.sprites.crown);
   ['data', 'promptBox', 'bullet', 'ghost'].forEach(k => add('sprites', k, A.sprites[k]));
   for (const k in A.sprites.items) add('items', k, A.sprites.items[k]);
   for (const k in A.sprites.upgrades) add('upgrades', k, A.sprites.upgrades[k]);
@@ -100,22 +107,23 @@
   const SEMI = { C: -9, D: -7, E: -5, F: -4, G: -2, A: 0, B: 2 };
   const hz = n => 440 * 2 ** ((SEMI[n[0]] + (n[1] === '#' ? 1 : 0) + (+n.at(-1) - 4) * 12) / 12);
   let timer = null;
-  function toggleMusic(speed, btn) {
-    if (timer) { clearInterval(timer); timer = null; document.querySelectorAll('#music,#fast').forEach(b => b.textContent = b.textContent.replace('stop', 'play')); return; }
+  function toggleMusic(song, speed, btn) {
+    if (timer) { clearInterval(timer); timer = null; document.querySelectorAll('#music,#fast,#menu').forEach(b => b.textContent = b.textContent.replace('stop', 'play')); return; }
     audio();
-    const stepSec = 60 / (A.music.bpm * speed) / 4;
+    const stepSec = 60 / (song.bpm * speed) / 4;
     let step = 0, next = ac.currentTime + 0.05;
     timer = setInterval(() => {
       while (next < ac.currentTime + 0.1) {
-        for (const tr of A.music.tracks) {
+        for (const tr of song.tracks) {
           const n = tr.notes[step];
           if (n) tone({ wave: tr.wave, freq: [hz(n), hz(n)], dur: stepSec * (tr.wave === 'noise' ? 0.6 : 0.9), vol: tr.vol }, next);
         }
-        step = (step + 1) % A.music.steps; next += stepSec;
+        step = (step + 1) % song.steps; next += stepSec;
       }
     }, 25);
     btn.textContent = btn.textContent.replace('play', 'stop');
   }
-  document.getElementById('music').onclick = e => toggleMusic(1, e.target);
-  document.getElementById('fast').onclick = e => toggleMusic(1.25, e.target);
+  document.getElementById('music').onclick = e => toggleMusic(A.music, 1, e.target);
+  document.getElementById('fast').onclick = e => toggleMusic(A.music, 1.25, e.target);
+  document.getElementById('menu').onclick = e => toggleMusic(A.menuMusic, 1, e.target);
 </script>

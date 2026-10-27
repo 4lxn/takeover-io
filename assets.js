@@ -728,6 +728,16 @@
         loop: false,
         size: 1,
       },
+      // 6x6 data bit; the client spawns a few and moves them from the Prompt Injection target to the thrower.
+      stealBit: {
+        frames: [
+          ['......', '..GG..', '.GWWG.', '.GWWG.', '..GG..', '......'],
+          ['......', '..ee..', '.eGGe.', '.eGGe.', '..ee..', '......'],
+        ],
+        fps: 8,
+        loop: true,
+        size: 0.5,
+      },
       // Optional extra layers: the client already draws these procedurally.
       deleted: { frames: deleted, fps: 12, loop: false, size: 4.6 }, // 32x32, uses 'T'
       reboot: { frames: reboot, fps: 12, loop: false, size: 2.3 }, // 16x16, same footprint as the ai sprite, uses 'T'
@@ -821,6 +831,45 @@
       ],
       takeover: notes([523, 659, 784, 1047, 784, 1047], 0.1, 0.5, 0.18),
       click: { wave: 'square', freq: [1500, 1500], dur: 0.025, vol: 0.1 },
+      countdown: { wave: 'square', freq: [660, 660], dur: 0.12, vol: 0.15 }, // one per 3-2-1 tick
+      go: notes([880, 1320], 0.08, 0.3, 0.18),
+      finalAlarm: notes([700, 950, 700, 950], 0.14, 0.14, 0.12, 'sawtooth'), // last 30 s
+    },
+
+    // Menu loop, same shape as music: calmer D minor (Dm-Bb-F-C), no kick or snare.
+    menuMusic: {
+      bpm: 90,
+      steps: 64,
+      tracks: [
+        {
+          wave: 'triangle', vol: 0.3, // bass
+          notes: seq(
+            'D2 - - - - - - - D3 - - - A2 - - - ' +
+            'A#1 - - - - - - - A#2 - - - F2 - - - ' +
+            'F2 - - - - - - - F3 - - - C3 - - - ' +
+            'C2 - - - - - - - C3 - - - G2 - - -'
+          ),
+        },
+        {
+          wave: 'square', vol: 0.04, // arpeggio
+          notes: seq(
+            'D4 - F4 - A4 - F4 - D4 - F4 - A4 - D5 - ' +
+            'D4 - F4 - A#4 - F4 - D4 - F4 - A#4 - D5 - ' +
+            'C4 - F4 - A4 - F4 - C4 - F4 - A4 - C5 - ' +
+            'C4 - E4 - G4 - E4 - C4 - E4 - G4 - C5 -'
+          ),
+        },
+        {
+          wave: 'sine', vol: 0.12, // lead
+          notes: seq(
+            'A5 - - - - - - - G5 - - - F5 - - - ' +
+            'F5 - - - - - - - D5 - - - - - - - ' +
+            'C5 - - - - - - - F5 - - - A5 - - - ' +
+            'G5 - - - - - - - E5 - - - - - - -'
+          ),
+        },
+        { wave: 'noise', vol: 0.12, notes: seq('- - C8 - '.repeat(16)) }, // soft hats
+      ],
     },
 
     // 4 bars of Am-F-C-G. One step = one 16th note (60 / bpm / 4 s); loop = 64 steps = 8 s at 120 bpm.

@@ -16,10 +16,10 @@ The server SHALL run exactly one shared arena. A person joining SHALL enter it a
 
 ### Requirement: Capacity
 
-The shared arena SHALL accept at most 20 people at once. Anyone trying to join a full arena SHALL be turned away with a message.
+The shared arena SHALL accept at most 120 people at once. Anyone trying to join a full arena SHALL be turned away with a message.
 
 #### Scenario: Full arena
-- **WHEN** a 21st person tries to join
+- **WHEN** a 121st person tries to join
 - **THEN** they see "The datacenter is full. Try Single player or come back later." and return to the start menu
 
 ### Requirement: Leaving

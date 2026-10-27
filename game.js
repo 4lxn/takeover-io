@@ -6,7 +6,8 @@
   // Every gameplay number lives here. Tune after playtesting; don't scatter constants.
   const CONFIG = {
     arena: 3000,
-    packets: 200,
+    packets: 200, packetsPerHuman: 3,  // more data on the map as more people join
+    aoi: 1150,                          // multiplayer: each client only receives what is this close to it
     packetRadius: 6,
     boxMax: 8, boxStart: 6, boxEvery: 6, boxRadius: 14,
     round: 300, takeover: 10,
@@ -17,7 +18,7 @@
     thrownSpeed: 900,
     radius: 18, radiusPerLevel: 1.5, maxRadius: 60,
     dropPackets: 10,
-    singleBots: 7, totalAIs: 8, maxHumans: 20,
+    singleBots: 7, totalAIs: 8, maxHumans: 120,
     botSight: 600,
     immunity: 3,
     critChance: 0.1, critMult: 2,
@@ -71,7 +72,7 @@
   const UPGRADES = Object.keys(CONFIG.upgrades);
   const ITEMS = Object.keys(CONFIG.items);
   const BOT_NAMES = ['Qubit', 'Tensor', 'Neuron', 'Byte', 'Echo', 'Glitch', 'Vector', 'Kernel',
-    'Cortex', 'Sigma', 'Lambda', 'Pixel', 'Cipher', 'Daemon', 'Nova', 'Unit-07'];
+    'Cortex', 'Sigma', 'Lambda', 'Pixel', 'Cipher', 'Daemon', 'Nova', 'Turing'];
 
   const rand = (a, b) => a + Math.random() * (b - a);
   const dist2 = (a, b) => (a.x - b.x) ** 2 + (a.y - b.y) ** 2;
@@ -98,7 +99,8 @@
     if (m.t === 'hello') {
       if (m.name != null && typeof m.name !== 'string') return null;
       if (m.cls != null && !Object.prototype.hasOwnProperty.call(CLASSES, m.cls)) return null;
-      return { t: 'hello', name: sanitizeName(m.name), cls: m.cls || 'transformer' };
+      if (m.skin != null && !(typeof m.skin === 'string' && /^[A-Za-z0-9_-]{1,24}$/.test(m.skin))) return null;
+      return { t: 'hello', name: sanitizeName(m.name), cls: m.cls || 'transformer', skin: m.skin || null };
     }
     if (m.t === 'in') {
       const { ax, ay } = m;
@@ -175,6 +177,7 @@
       id: g.nextId++, name: sanitizeName(name) || randomName(), bot: !!opts.bot, color,
       x: 0, y: 0, kills: 0, dead: 0, protect: CONFIG.protect,
       cls: CLASSES[opts.cls] ? opts.cls : opts.bot ? Object.keys(CLASSES)[Math.floor(Math.random() * 3)] : 'transformer',
+      skin: typeof opts.skin === 'string' && /^[A-Za-z0-9_-]{1,24}$/.test(opts.skin) ? opts.skin : null,
       input: { ax: 0, ay: 0 }, wantUse: false, wantPick: null, wantDash: false,
     };
     freshStats(ai);
@@ -366,7 +369,7 @@
       target.xp -= steal;
       if (user) addXp(g, user, steal);
       feed(g, `${user ? user.name : '?'} prompt-injected ${target.name} (-${steal} XP)`);
-      g.events.push({ e: 'hitBy', id: target.id, item: t.item });
+      g.events.push({ e: 'hitBy', id: target.id, item: t.item, by: user ? user.id : null });
       return;
     }
     if (target.immune[t.item] > 0 || target.fx[t.item] > 0) return;
@@ -374,7 +377,7 @@
     feed(g, t.item === 'hallucination'
       ? `${user ? user.name : '?'} made ${target.name} hallucinate`
       : `${user ? user.name : '?'} → ${target.name}: session limit reached`);
-    g.events.push({ e: 'hitBy', id: target.id, item: t.item });
+    g.events.push({ e: 'hitBy', id: target.id, item: t.item, by: user ? user.id : null });
   }
 
   function dodged(g, ai) {
@@ -534,6 +537,7 @@
       if (g.takeoverT <= 0) resetRound(g);
       return;
     }
+    g.tick = (g.tick || 0) + 1;
     g.roundT -= dt;
     if (g.roundT <= 0) { g.roundT = 0; endRound(g); return; }
 
@@ -656,12 +660,20 @@
       }
     }
 
+    const humans = g.mode === 'multi' ? [...g.ais.values()].filter((a) => !a.bot).length : 1;
+    const want = CONFIG.packets + CONFIG.packetsPerHuman * Math.max(0, humans - 1);
+    let natural = 0;
+    for (const p of g.packets.values()) if (p.natural) natural++;
+    for (let i = natural; i < want && i < natural + 5; i++) spawnPacket(g);
+
     g.boxT += dt;
     if (g.boxT >= CONFIG.boxEvery) { g.boxT = 0; if (g.boxes.length < CONFIG.boxMax) spawnBox(g); }
   }
 
   // Public state for rendering and the network. `meId` adds the private HUD fields of one player.
-  function snapshot(g, meId) {
+  // Shared part of a snapshot, built once per tick and reused for every client.
+  function sharedState(g) {
+    if (g._shared && g._shared.tick === g.tick) return g._shared;
     const ais = [];
     for (const a of g.ais.values()) {
       if (a.dead) continue;
@@ -670,7 +682,7 @@
         hp: Math.ceil(a.hp), mhp: a.maxHp, lv: a.level,
         g: a.fx.gpuBoost > 0 ? 1 : 0, f: a.fx.firewall > 0 ? 1 : 0,
         h: a.fx.hallucination > 0 ? 1 : 0, s: a.fx.sessionLimit > 0 ? 1 : 0, p: a.protect > 0 ? 1 : 0,
-        k: a.dashT > 0 ? 1 : 0, st: a.streak, cl: a.cls,
+        k: a.dashT > 0 ? 1 : 0, st: a.streak, cl: a.cls, sk: a.skin,
       });
     }
     for (const d of g.decoys) {
@@ -678,28 +690,59 @@
       if (!o) continue;
       ais.push({ id: 'd' + d.id, n: o.name, c: o.color, x: Math.round(d.x), y: Math.round(d.y), r: radiusOf(o),
         hp: Math.ceil(o.hp), mhp: o.maxHp, lv: o.level, g: o.fx.gpuBoost > 0 ? 1 : 0, f: o.fx.firewall > 0 ? 1 : 0,
-        h: 0, s: 0, p: o.protect > 0 ? 1 : 0, k: 0, st: o.streak, cl: o.cls });
+        h: 0, s: 0, p: o.protect > 0 ? 1 : 0, k: 0, st: o.streak, cl: o.cls, sk: o.skin });
     }
     const ranked = [...g.ais.values()].sort((a, b) => b.xp - a.xp || b.kills - a.kills);
-    const snap = {
-      phase: g.phase, roundT: Math.ceil(g.roundT), takeoverT: Math.ceil(g.takeoverT),
-      winner: g.winner, top3: g.top3,
-      ais,
+    const rank = new Map(ranked.map((a, i) => [a.id, i + 1]));
+    g._shared = {
+      tick: g.tick, ais, rank,
       bullets: g.bullets.map((b) => [b.id, Math.round(b.x), Math.round(b.y), b.color]),
       thrown: g.thrown.map((t) => [t.id, Math.round(t.x), Math.round(t.y), t.item]),
       boxes: g.boxes.map((b) => [b.id, Math.round(b.x), Math.round(b.y)]),
       board: ranked.slice(0, 5).map((a, i) => [i + 1, a.name, a.xp, a.id]),
     };
+    return g._shared;
+  }
+
+  // Public state for rendering and the network. `meId` adds the private HUD fields of one player;
+  // `aoi` (multiplayer) keeps only what is within that distance of the player.
+  function snapshot(g, meId, aoi) {
+    const sh = sharedState(g);
     const me = g.ais.get(meId);
+    let { ais, bullets, thrown } = sh;
+    if (aoi && me) {
+      const r2 = aoi * aoi, mx = me.x, my = me.y;
+      const near = (x, y) => (x - mx) ** 2 + (y - my) ** 2 <= r2;
+      ais = ais.filter((a) => near(a.x, a.y));
+      bullets = bullets.filter((b) => near(b[1], b[2]));
+      thrown = thrown.filter((t) => near(t[1], t[2]));
+    }
+    const snap = {
+      phase: g.phase, roundT: Math.ceil(g.roundT), takeoverT: Math.ceil(g.takeoverT),
+      winner: g.winner, top3: g.top3, ais, bullets, thrown, boxes: sh.boxes, board: sh.board,
+    };
     if (me) {
       snap.me = {
         id: me.id, name: me.name, cls: me.cls, xp: me.xp, lv: me.level, xpPrev: xpForLevel(me.level - 1), xpNext: xpForLevel(me.level),
         up: me.up, choices: me.choices, pending: me.pending + me.augPending, kind: me.kind, aug: Object.keys(me.aug),
-        item: me.item, dead: Math.ceil(me.dead), hall: me.fx.hallucination > 0 ? 1 : 0, rank: ranked.indexOf(me) + 1,
+        item: me.item, dead: Math.ceil(me.dead), hall: me.fx.hallucination > 0 ? 1 : 0, rank: sh.rank.get(me.id) || 0,
         dashCd: Math.round(me.dashCd * 10) / 10, dashMax: dashCooldownOf(me), focus: me.focus, streak: me.streak,
       };
     }
     return snap;
+  }
+
+  // Multiplayer: the events one client needs. Global ones (feed, announcer, round) go to everyone;
+  // positional ones only when near; personal ones only to the players involved.
+  const GLOBAL_EVENTS = new Set(['feed', 'announce', 'takeover', 'round']);
+  function eventsFor(events, g, meId, aoi) {
+    const me = g.ais.get(meId);
+    const r2 = aoi * aoi;
+    return events.filter((e) => {
+      if (GLOBAL_EVENTS.has(e.e) || e.id === meId || e.by === meId) return true;
+      if (e.x == null || !me) return false;
+      return (e.x - me.x) ** 2 + (e.y - me.y) ** 2 <= r2;
+    });
   }
 
   function drainEvents(g) { const e = g.events; g.events = []; return e; }
@@ -707,7 +750,7 @@
   function allPackets(g) { return [...g.packets.values()].map((p) => [p.id, Math.round(p.x), Math.round(p.y), p.v]); }
 
   const api = {
-    CONFIG, UPGRADES, ITEMS, AUGMENTS, CLASSES, createGame, addAI, removeAI, setInput, step, snapshot,
+    CONFIG, UPGRADES, ITEMS, AUGMENTS, CLASSES, createGame, addAI, removeAI, setInput, step, snapshot, eventsFor,
     drainEvents, drainPackets, allPackets, parseInput, sanitizeName, randomName, xpForLevel,
     // exposed for tests
     _: { addXp, deleteAI, fillBots, useItem, landThrown, offerChoices, spawnPacket, radiusOf, rangeOf, hurt, applyAugment },

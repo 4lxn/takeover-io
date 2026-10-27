@@ -8,7 +8,8 @@ const G = require('./game.js');
 const PORT = Number(process.env.PORT) || 3000;
 const TICK = 1 / 30;
 const MAX_MSGS_PER_SEC = 60;
-const MAX_SOCKETS = 100;        // humans + sockets still saying hello
+const MAX_HUMANS = Number(process.env.MAX_HUMANS) || G.CONFIG.maxHumans;
+const MAX_SOCKETS = MAX_HUMANS + 20; // humans + sockets still saying hello
 const HELLO_TIMEOUT = 10000;    // close sockets that never say hello
 const MAX_BUFFERED = 64 * 1024; // skip snapshots for clients that can't keep up
 
@@ -52,8 +53,8 @@ wss.on('connection', (ws) => {
     const m = G.parseInput(data.toString());
     if (!m) return;
     if (m.t === 'hello' && !c.id) {
-      if (humans() >= G.CONFIG.maxHumans) { ws.send(JSON.stringify({ t: 'full' })); ws.close(); return; }
-      const ai = G.addAI(game, m.name, { cls: m.cls });
+      if (humans() >= MAX_HUMANS) { ws.send(JSON.stringify({ t: 'full' })); ws.close(); return; }
+      const ai = G.addAI(game, m.name, { cls: m.cls, skin: m.skin });
       c.id = ai.id;
       ws.send(JSON.stringify({ t: 'welcome', id: ai.id, arena: G.CONFIG.arena, packets: G.allPackets(game) }));
     } else if (m.t === 'in' && c.id) {
@@ -69,19 +70,31 @@ wss.on('connection', (ws) => {
 });
 
 // 30 Hz simulation, snapshots on every other tick (15 Hz). Idle while nobody is connected.
+// BENCH=1 logs how long each tick takes (simulation + snapshots), every 5 s.
+const bench = process.env.BENCH ? { n: 0, sum: 0, max: 0, bytes: 0 } : null;
+if (bench) setInterval(() => {
+  console.log(`bench humans=${humans()} tick avg=${(bench.sum / Math.max(1, bench.n)).toFixed(2)}ms max=${bench.max.toFixed(2)}ms out=${(bench.bytes / 5 / 1024).toFixed(0)}KB/s(raw)`);
+  bench.n = bench.sum = bench.max = bench.bytes = 0;
+}, 5000);
+
 let tick = 0;
 setInterval(() => {
   if (!humans()) return;
+  const t0 = bench ? performance.now() : 0;
   G.step(game, TICK);
-  if (++tick % 2) return;
+  // 15 snapshots/s normally; 10/s in big lobbies to save CPU and bandwidth (clients interpolate).
+  if (++tick % (humans() > 30 ? 3 : 2)) return;
   const events = G.drainEvents(game);
   const pk = G.drainPackets(game);
   for (const [ws, c] of clients) {
     if (!c.id || ws.readyState !== ws.OPEN || ws.bufferedAmount > MAX_BUFFERED) continue;
-    const snap = G.snapshot(game, c.id);
-    snap.t = 'snap'; snap.events = events; snap.pk = pk;
-    ws.send(JSON.stringify(snap));
+    const snap = G.snapshot(game, c.id, G.CONFIG.aoi);
+    snap.t = 'snap'; snap.events = G.eventsFor(events, game, c.id, G.CONFIG.aoi); snap.pk = pk;
+    const out = JSON.stringify(snap);
+    if (bench) bench.bytes += out.length;
+    ws.send(out);
   }
+  if (bench) { const dt = performance.now() - t0; bench.n++; bench.sum += dt; bench.max = Math.max(bench.max, dt); }
 }, TICK * 1000);
 
 // Heartbeat: drop half-open connections (a phone that lost signal) so they free their slot.
