@@ -1,0 +1,23 @@
+# Render Blueprint: New → Blueprint → pick this repo. Creates both free services.
+services:
+  # WebSocket game server (free plan sleeps after ~15 min idle; multiplayer waits ~1 min to wake it)
+  - type: web
+    name: takeover-io-server
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /
+
+  # Client as a static site (always on, CDN), pointed at the server above
+  - type: web
+    name: takeover-io
+    runtime: static
+    buildCommand: sed -i "s#const WS_URL = '';#const WS_URL = 'wss://$WS_HOST';#" index.html
+    staticPublishPath: .
+    envVars:
+      - key: WS_HOST
+        fromService:
+          type: web
+          name: takeover-io-server
+          property: host

@@ -1,0 +1,121 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>takeover.io assets</title>
+<style>
+  body { background: #070a12; color: #d8e6ff; font: 13px monospace; margin: 16px; }
+  h2 { font-size: 14px; margin: 18px 0 6px; color: #3df2ff; }
+  .row { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; }
+  figure { margin: 0; text-align: center; }
+  canvas { image-rendering: pixelated; background: #122038; display: block; margin-bottom: 4px; }
+  button { background: #122038; color: #d8e6ff; border: 1px solid #24365c; font: inherit; padding: 4px 8px; cursor: pointer; }
+</style>
+<h2>ai (10 tints)</h2><div class="row" id="ais"></div>
+<h2>sprites</h2><div class="row" id="sprites"></div>
+<h2>items</h2><div class="row" id="items"></div>
+<h2>upgrades</h2><div class="row" id="upgrades"></div>
+<h2>fx (status overlays shown over an AI at 0.75 alpha)</h2><div class="row" id="fx"></div>
+<h2>classes</h2><div class="row" id="classes"></div>
+<h2>decor (on the arena bg)</h2><div class="row" id="decor"></div>
+<h2>logo</h2><div class="row" id="logo"></div>
+<h2>sfx</h2><div class="row" id="sfx"></div>
+<h2>music</h2><div class="row"><button id="music">play music</button><button id="fast">play fast (x1.25)</button></div>
+<script src="assets.js"></script>
+<script>
+  const A = window.ASSETS, SCALE = 4, anims = [];
+
+  function draw(ctx, grid, tint, s, ox = 0, oy = 0) {
+    grid.forEach((row, y) => [...row].forEach((ch, x) => {
+      const c = A.palette[ch] === 'tint' ? tint : A.palette[ch];
+      if (c) { ctx.fillStyle = c; ctx.fillRect(Math.floor(ox + x * s), Math.floor(oy + y * s), Math.ceil(s), Math.ceil(s)); }
+    }));
+  }
+
+  function add(parent, label, sprite, { tint = A.playerColors[0], scale = SCALE, overAi = false, bg } = {}) {
+    const fig = document.createElement('figure'), cv = document.createElement('canvas');
+    cv.width = sprite.frames[0][0].length * scale;
+    cv.height = sprite.frames[0].length * scale;
+    if (bg) cv.style.background = bg;
+    fig.append(cv, label);
+    document.getElementById(parent).append(fig);
+    anims.push({ ctx: cv.getContext('2d'), sprite, tint, scale, overAi });
+  }
+
+  A.playerColors.forEach(c => add('ais', c, A.sprites.ai, { tint: c }));
+  ['data', 'promptBox', 'bullet', 'ghost'].forEach(k => add('sprites', k, A.sprites[k]));
+  for (const k in A.sprites.items) add('items', k, A.sprites.items[k]);
+  for (const k in A.sprites.upgrades) add('upgrades', k, A.sprites.upgrades[k]);
+  for (const k in A.fx) add('fx', k, A.fx[k], { overAi: ['firewall', 'sessionLimit', 'gpuBoost'].includes(k), tint: A.playerColors[k === 'muzzle' ? 1 : 0] });
+  for (const k in A.sprites.classes) add('classes', k, A.sprites.classes[k]);
+  for (const k in A.decor) add('decor', k, A.decor[k], { bg: A.theme.bg });
+  add('logo', 'logo', A.sprites.logo, { scale: 6, bg: A.theme.bg });
+
+  (function tick(t) {
+    for (const a of anims) {
+      const frameOf = s => s.frames[s.fps ? Math.floor(t / 1000 * s.fps) % s.frames.length : 0];
+      const w = a.ctx.canvas.width;
+      a.ctx.clearRect(0, 0, w, a.ctx.canvas.height);
+      if (a.overAi) { // the AI is drawn at 2.3 x radius, the overlay at size x radius
+        const s = w * 2.3 / a.sprite.size / 16;
+        draw(a.ctx, frameOf(A.sprites.ai), a.tint, s, (w - 16 * s) / 2, (w - 16 * s) / 2);
+        a.ctx.globalAlpha = 0.75;
+      }
+      draw(a.ctx, frameOf(a.sprite), a.tint, a.scale);
+      a.ctx.globalAlpha = 1;
+    }
+    requestAnimationFrame(tick);
+  })(0);
+
+  // Reference synth for the sfx/music format (the game has its own).
+  let ac;
+  const audio = () => (ac = ac || new AudioContext());
+  function tone({ wave, freq, dur, vol }, t) {
+    const g = ac.createGain();
+    g.gain.setValueAtTime(vol, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    let src;
+    if (wave === 'noise') {
+      const buf = ac.createBuffer(1, Math.ceil(ac.sampleRate * dur), ac.sampleRate), d = buf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      src = ac.createBufferSource(); src.buffer = buf;
+      const lp = ac.createBiquadFilter(); lp.type = 'lowpass';
+      lp.frequency.setValueAtTime(freq[0], t); lp.frequency.exponentialRampToValueAtTime(freq[1], t + dur);
+      src.connect(lp).connect(g);
+    } else {
+      src = ac.createOscillator(); src.type = wave;
+      src.frequency.setValueAtTime(freq[0], t); src.frequency.exponentialRampToValueAtTime(freq[1], t + dur);
+      src.connect(g);
+    }
+    g.connect(ac.destination);
+    src.start(t); src.stop(t + dur);
+    return t + dur;
+  }
+  const play = sfx => { let t = audio().currentTime; [].concat(sfx).forEach(s => (t = tone(s, t))); };
+
+  for (const k in A.sfx) {
+    const b = document.createElement('button');
+    b.textContent = k; b.onclick = () => play(A.sfx[k]);
+    document.getElementById('sfx').append(b);
+  }
+
+  const SEMI = { C: -9, D: -7, E: -5, F: -4, G: -2, A: 0, B: 2 };
+  const hz = n => 440 * 2 ** ((SEMI[n[0]] + (n[1] === '#' ? 1 : 0) + (+n.at(-1) - 4) * 12) / 12);
+  let timer = null;
+  function toggleMusic(speed, btn) {
+    if (timer) { clearInterval(timer); timer = null; document.querySelectorAll('#music,#fast').forEach(b => b.textContent = b.textContent.replace('stop', 'play')); return; }
+    audio();
+    const stepSec = 60 / (A.music.bpm * speed) / 4;
+    let step = 0, next = ac.currentTime + 0.05;
+    timer = setInterval(() => {
+      while (next < ac.currentTime + 0.1) {
+        for (const tr of A.music.tracks) {
+          const n = tr.notes[step];
+          if (n) tone({ wave: tr.wave, freq: [hz(n), hz(n)], dur: stepSec * (tr.wave === 'noise' ? 0.6 : 0.9), vol: tr.vol }, next);
+        }
+        step = (step + 1) % A.music.steps; next += stepSec;
+      }
+    }, 25);
+    btn.textContent = btn.textContent.replace('play', 'stop');
+  }
+  document.getElementById('music').onclick = e => toggleMusic(1, e.target);
+  document.getElementById('fast').onclick = e => toggleMusic(1.25, e.target);
+</script>
