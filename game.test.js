@@ -258,3 +258,16 @@ test('10.1 classes change stats; Diffusion shots split on hit', () => {
   G.step(g, DT);
   assert.ok(g.bullets.filter((b) => b.frag).length >= 2);
 });
+
+test('11.1 single-player difficulty changes the bots', () => {
+  const easy = G.createGame({ mode: 'single', difficulty: 'easy' });
+  const hard = G.createGame({ mode: 'single', difficulty: 'tryhard' });
+  G.addAI(easy, 'me'); G.addAI(hard, 'me');
+  const eb = [...easy.ais.values()].find((a) => a.bot), hb = [...hard.ais.values()].find((a) => a.bot);
+  assert.ok(eb.mods.fire > hb.mods.fire && eb.mods.aimJitter > hb.mods.aimJitter);
+  assert.strictEqual(G.createGame({ mode: 'single', difficulty: 'nope' }).difficulty, 'medium');
+  // try-hard picks the prismatic augment
+  hb.kind = 'aug'; hb.choices = ['vampiric', 'moe', 'overfit'];
+  G.step(hard, DT);
+  assert.ok(hb.aug.moe || hb.choices.length === 0);
+});

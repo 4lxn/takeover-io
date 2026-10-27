@@ -1,0 +1,10 @@
+{
+  "name": "takeover.io",
+  "short_name": "takeover.io",
+  "description": "Every player is a rogue AI. Take over the datacenter.",
+  "start_url": "/",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#070a12",
+  "theme_color": "#070a12"
+}

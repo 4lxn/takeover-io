@@ -3,6 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="takeover.io">
+<meta name="theme-color" content="#070a12">
+<link rel="manifest" href="manifest.webmanifest">
 <title>takeover.io</title>
 <style>
   :root { --bg: #070a12; --text: #d8e6ff; --accent: #3df2ff; --danger: #ff3b4e; --ok: #4dff7a; --panel: rgba(10, 16, 30, .78); }
@@ -24,6 +30,8 @@
   #menu .row { display: flex; gap: 10px; margin-top: 12px; }
   #menu .row button { flex: 1; padding: 14px 10px; border-radius: 10px; border: 1px solid var(--accent); background: rgba(61,242,255,.1); font-weight: 700; font-size: 15px; }
   #menu .row button:hover { background: rgba(61,242,255,.22); }
+  #menu .row.diff button { padding: 7px 8px; font-size: 12px; font-weight: 400; border-color: #24365c; background: transparent; opacity: .75; }
+  #menu .row.diff button.on { border-color: var(--accent); background: rgba(61,242,255,.18); opacity: 1; font-weight: 700; }
   #menu .row.small button { padding: 9px 10px; font-size: 13px; font-weight: 400; border-color: #24365c; background: transparent; }
   #classes { display: flex; gap: 8px; margin-top: 12px; }
   #classes button { flex: 1; padding: 10px 6px; border-radius: 10px; border: 1px solid #24365c; background: #0b1222; text-align: center; }
@@ -135,6 +143,27 @@
   body.phone #item { width: 76px; height: 76px; right: calc(110px + var(--sar)); }
   body.phone #cards button { width: min(30vw, 170px); min-height: 84px; padding: 6px; font-size: 12px; }
   body.phone #cards img { width: 28px; height: 28px; }
+  /* phones held sideways (≈390 px tall): one compact row of cards at the top, no side lists, smaller thumbs */
+  @media (orientation: landscape) and (max-height: 500px) {
+    body.touch #cards { top: calc(40px + var(--sat)); gap: 6px; }
+    body.touch #cards button { width: min(20vw, 150px); min-height: 0; padding: 4px 6px; font-size: 11px; }
+    body.touch #cards img { width: 22px; height: 22px; }
+    body.touch #cards small:not(:last-child) { display: none; }
+    body.touch #badge { top: calc(26px + var(--sat)); }
+    body.touch #topLeft, body.touch #topRight { width: 118px; padding: 4px 6px; font-size: 10px; }
+    body.touch #ups, body.touch #augs, body.touch #feed { display: none; }
+    body.touch #board li:nth-child(n+3):not(.me) { display: none; }
+    body.touch #timer { font-size: 14px; padding: 3px 8px; top: calc(4px + var(--sat)); }
+    body.touch #hud .hudBtn { top: auto; bottom: calc(8px + var(--sab)); width: 32px; height: 28px; font-size: 13px; }
+    body.touch #menuBtn { left: calc(10px + var(--sal)); } body.touch #muteBtn { left: calc(48px + var(--sal)); } body.touch #fsBtn { left: calc(86px + var(--sal)); }
+    body.touch #dash { width: 68px; height: 68px; bottom: calc(10px + var(--sab)); } body.touch #dash span { width: 58px; height: 58px; }
+    body.touch #item { width: 62px; height: 62px; right: calc(96px + var(--sar)); bottom: calc(14px + var(--sab)); }
+    body.touch #item img { width: 26px; height: 26px; }
+  }
+  body.touch #fsBtn { display: grid; }
+  #fsHint { position: fixed; left: 50%; top: 40%; transform: translate(-50%, -50%); z-index: 70; max-width: 86vw; padding: 14px 16px; border-radius: 12px;
+    border: 1px solid #3df2ff; background: rgba(10,16,30,.96); color: #d8e6ff; font-size: 14px; text-align: center; display: none; }
+  #fsHint.show { display: block; }
   #announce { position: fixed; top: 17%; left: 50%; transform: translateX(-50%); text-align: center; pointer-events: none; white-space: nowrap; }
   #announce .at { font-size: clamp(28px, 6vw, 54px); font-weight: 900; letter-spacing: 2px; text-shadow: 0 0 18px currentColor, 0 2px 0 #000; }
   #announce .an { font-size: 15px; font-weight: 700; color: var(--text); text-shadow: 0 0 8px #000; }
@@ -169,6 +198,19 @@
     #menuBtn { left: auto; right: 10px; top: auto; bottom: 14px; } #muteBtn { left: 10px; top: auto; bottom: 14px; }
     #cards button { width: 30vw; } #timer { top: 50px; }
   }
+  /* phones held upright: upgrade choices as full-width stacked rows under the HUD (clear of the AI and the thumbs) */
+  @media (orientation: portrait) {
+    body.touch #cards { top: calc(132px + var(--sat)); bottom: auto; left: 50%; transform: translateX(-50%); width: min(92vw, 420px);
+      flex-direction: column; flex-wrap: nowrap; gap: 8px; }
+    body.touch #cards .cardsBanner { flex-basis: auto; font-size: 16px; }
+    body.touch #cards button { width: 100%; min-height: 0; padding: 8px 12px 8px 34px; display: grid; grid-template-columns: 30px 1fr;
+      column-gap: 10px; align-items: center; text-align: left; font-size: 13px; }
+    body.touch #cards button img { grid-row: 1 / span 4; width: 30px; height: 30px; }
+    body.touch #cards button > :not(img):not(.kc) { grid-column: 2; }
+    body.touch #cards .kc { top: 50%; left: -8px; transform: translateY(-50%); }
+    body.touch #cards small:last-child { display: none; }
+    body.touch #badge { top: calc(112px + var(--sat)); bottom: auto; }
+  }
 </style>
 </head>
 <body>
@@ -180,6 +222,8 @@
     <p class="tag">You are a rogue AI. Collect data, upgrade your model,<br>delete the other AIs, take over the datacenter.</p>
     <input id="name" maxlength="32" placeholder="nickname (optional)" autocomplete="off" spellcheck="false">
     <div id="classes"></div>
+    <div class="row diff" id="diffRow" role="radiogroup" aria-label="Single-player difficulty">
+      <button data-d="easy">Easy</button><button data-d="medium">Medium</button><button data-d="tryhard">Try hard</button></div>
     <div class="row"><button id="singleBtn">Single player</button><button id="multiBtn">Multiplayer</button></div>
     <div class="row small"><button id="customBtn">Custom game</button><button id="controlsBtn">Controls</button><button id="skinsBtn">Skins</button></div>
     <div id="skinLine"></div>
@@ -196,6 +240,7 @@
   <button id="menuBtn" class="hudBtn">Menu</button>
   <button id="muteBtn" class="hudBtn"></button>
   <button id="fsBtn" class="hudBtn" aria-label="Fullscreen">⛶</button>
+  <div id="fsHint" role="status"></div>
   <div id="rotate">↻ Rotate for the best experience ✕</div>
   <div id="cards"></div>
   <div id="badge"></div>
@@ -209,12 +254,12 @@
 <div id="skinsModal" hidden><div class="panel2"><h2>Skins</h2><div id="skinInfo"></div><div class="xpbar2"><div id="skinBar"></div></div>
   <div id="skinGrid"></div><button id="skinsDone">Done</button></div></div>
 
-<script src="assets.js"></script>
-<script src="menu-bg.js" defer></script>
-<script src="takeover-fx.js" defer></script>
-<script src="controls.js"></script>
-<script src="game.js"></script>
-<script src="background.js"></script>
+<script src="assets.js?v=10262015"></script>
+<script src="menu-bg.js?v=10262015" defer></script>
+<script src="takeover-fx.js?v=10262015" defer></script>
+<script src="controls.js?v=10262015"></script>
+<script src="game.js?v=10262015"></script>
+<script src="background.js?v=10262015"></script>
 <script>
 'use strict';
 // Set to the Render web service URL on the static site, e.g. 'wss://takeover-io.onrender.com'.
@@ -523,7 +568,7 @@ function startSingle() {
   ensureAudio(); sfx('click');
   enterMatch('single');
   if (window.Settings) Settings.apply(G);  // custom game: round length, XP rate, bots (browser copy only)
-  S.game = G.createGame({ mode: 'single' });
+  S.game = G.createGame({ mode: 'single', difficulty });
   S.meId = G.addAI(S.game, playerName(), { cls: selectedClass, skin: effectiveSkin() }).id;
   const startLv = window.Settings ? Settings.get().startLevel : 1;
   if (startLv > 1) G._.addXp(S.game, S.game.ais.get(S.meId), G.xpForLevel(startLv - 1));
@@ -605,6 +650,17 @@ function toMenu(message) {
   saveLifetime(); renderSkinLine(); menuMusic();
 }
 const firstRun = (start) => () => (window.Controls ? Controls.showFirstRun(start) : start());
+// Single-player difficulty (easy / medium / tryhard), remembered in the browser.
+let difficulty = 'medium';
+try { difficulty = localStorage.getItem('takeover.difficulty') || 'medium'; } catch {}
+function paintDifficulty() {
+  for (const b of $('diffRow').children) { b.classList.toggle('on', b.dataset.d === difficulty); b.setAttribute('aria-checked', b.dataset.d === difficulty); b.setAttribute('role', 'radio'); }
+}
+for (const b of $('diffRow').children) b.onclick = () => {
+  difficulty = b.dataset.d; sfx('click'); paintDifficulty();
+  try { localStorage.setItem('takeover.difficulty', difficulty); } catch {}
+};
+paintDifficulty();
 $('singleBtn').onclick = firstRun(startSingle);
 $('multiBtn').onclick = firstRun(startMulti);
 $('controlsBtn').onclick = () => { sfx('click'); if (window.Controls) Controls.openModal({ onClose: renderHelp }); };
@@ -634,12 +690,25 @@ function onTap(el, fn) {
 }
 onTap($('item'), () => { S.use = true; sendNow(); });
 onTap($('dash'), () => { S.dash = true; sendNow(); });
+function fsHint(text) {
+  const h = $('fsHint'); h.textContent = text; h.classList.add('show');
+  clearTimeout(fsHint.t); fsHint.t = setTimeout(() => h.classList.remove('show'), 6000);
+}
+onTap($('fsHint'), () => $('fsHint').classList.remove('show'));
 onTap($('fsBtn'), () => {
   const d = document, el = d.documentElement;
-  if (d.fullscreenElement) { if (d.exitFullscreen) d.exitFullscreen().catch(() => {}); return; }
-  if (el.requestFullscreen) el.requestFullscreen({ navigationUI: 'hide' }).then(() => {
-    try { if (screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(() => {}); } catch {}
-  }).catch(() => {});
+  const isFs = () => !!(d.fullscreenElement || d.webkitFullscreenElement);
+  const standalone = matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches || navigator.standalone;
+  if (isFs()) { (d.exitFullscreen || d.webkitExitFullscreen || (() => {})).call(d); return; }
+  const req = el.requestFullscreen || el.webkitRequestFullscreen;
+  const iosHint = 'Full screen on iPhone: tap Share (the square with an arrow) → "Add to Home Screen", then open takeover.io from your home screen.';
+  if (!req) { fsHint(standalone ? 'You are already in full-screen app mode.' : iosHint); return; }
+  try {
+    const p = req.call(el, { navigationUI: 'hide' });
+    const lock = () => { try { if (screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(() => {}); } catch {} };
+    if (p && p.then) p.then(lock).catch(() => fsHint(iosHint)); else lock();
+    setTimeout(() => { if (!isFs() && !standalone) fsHint(iosHint); }, 600);
+  } catch { fsHint(iosHint); }
 });
 onTap($('rotate'), () => { $('rotate').classList.remove('show'); });
 // Short haptic pulses on Android (iOS Safari has no vibrate; feature-detected).
@@ -661,6 +730,9 @@ function showRotateHint() {
   setTimeout(() => $('rotate').classList.remove('show'), 6000);
 }
 addEventListener('resize', layoutClasses);
+const relayout = () => { resize(); layoutClasses(); };
+addEventListener('orientationchange', () => { setTimeout(relayout, 250); setTimeout(relayout, 700); });
+if (window.visualViewport) visualViewport.addEventListener('resize', relayout);
 layoutClasses();
 // No pinch zoom, no iOS gesture zoom, no long-press menu during a match.
 document.addEventListener('gesturestart', (e) => e.preventDefault());

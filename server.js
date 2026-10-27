@@ -24,6 +24,7 @@ const FILES = {
   '/menu-bg.js': ['menu-bg.js', 'text/javascript; charset=utf-8'],
   '/takeover-fx.js': ['takeover-fx.js', 'text/javascript; charset=utf-8'],
   '/lobby.html': ['lobby.html', 'text/html; charset=utf-8'],
+  '/manifest.webmanifest': ['manifest.webmanifest', 'application/manifest+json'],
 };
 
 const server = http.createServer((req, res) => {

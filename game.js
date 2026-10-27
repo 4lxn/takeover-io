@@ -22,15 +22,22 @@
     botSight: 600,
     immunity: 3,
     critChance: 0.1, critMult: 2,
-    killBase: 10, bountyPerStreak: 10, multiKillWindow: 5,
+    killBase: 8, bountyPerStreak: 10, multiKillWindow: 5,
     dash: { speed: 3.5, dur: 0.22, cooldown: 3 },
     classes: {
       transformer: { name: 'Transformer', desc: 'Balanced. +25% XP from data packets', hp: 1, speed: 1, dataXp: 1.25 },
       diffusion: { name: 'Diffusion', desc: 'Tank. +40% HP, slower. Shots split on hit', hp: 1.4, speed: 0.85, split: 0.4 },
       agent: { name: 'Agent', desc: 'Assassin. Fast, +15% crit, 2 s dash, -25% HP', hp: 0.75, speed: 1.15, crit: 0.15, dashCd: 2 },
     },
-    levelXp: { base: 6, growth: 1.25 }, // XP to go from level L to L+1 = base · growth^(L-1): each level costs 25% more
+    levelXp: { base: 10, growth: 1.3 }, // XP to go from level L to L+1 = base · growth^(L-1): each level costs 30% more
     xpRate: 1,                       // custom games multiply all XP gains
+    // Single-player bot difficulty. aimJitter: radians of random aim error; fire/speed: multipliers;
+    // itemUse: chance per tick to use a ready item; dodge: chance per tick to dash away from an incoming shot.
+    difficulty: {
+      easy: { aimJitter: 0.45, fire: 1.6, speed: 0.85, itemUse: 0.01, dodge: 0, lead: false, smart: false },
+      medium: { aimJitter: 0.12, fire: 1, speed: 1, itemUse: 0.2, dodge: 0, lead: false, smart: false },
+      tryhard: { aimJitter: 0, fire: 0.85, speed: 1.08, itemUse: 1, dodge: 0.4, lead: true, smart: true },
+    },
     augmentEvery: 3,                                   // levels 3, 6, 9… offer augments instead of upgrades
     rarity: { silver: 60, gold: 30, prismatic: 10 },
     aug: { vampiric: 0.2, critThinking: 0.2, adversarial: 0.3, chainDamage: 40, chainRadius: 220,
@@ -121,6 +128,7 @@
   function createGame(opts = {}) {
     const g = {
       mode: opts.mode === 'multi' ? 'multi' : 'single',
+      difficulty: CONFIG.difficulty[opts.difficulty] ? opts.difficulty : 'medium',
       nextId: 1,
       ais: new Map(), bullets: [], thrown: [], decoys: [], boxes: [],
       packets: new Map(), pkAdd: [], pkDel: [],
@@ -208,7 +216,7 @@
       : humans === 0 ? 0 : Math.max(0, CONFIG.totalAIs - humans);
     for (let i = bots.length; i < want; i++) {
       const taken = new Set([...g.ais.values()].map((a) => a.name));
-      addAI(g, BOT_NAMES.find((n) => !taken.has(n)) || randomName(), { bot: true });
+      addAI(g, BOT_NAMES.find((n) => !taken.has(n)) || randomName(), { bot: true }).mods = CONFIG.difficulty[g.difficulty];
     }
     for (let i = bots.length - 1; i >= want; i--) removeAI(g, bots[i].id);
   }
@@ -226,7 +234,7 @@
   // Derived stats from upgrades and effects.
   const radiusOf = (ai) => Math.min(CONFIG.maxRadius, CONFIG.radius + CONFIG.radiusPerLevel * (ai.level - 1));
   const rangeOf = (ai) => CONFIG.range + CONFIG.upgrades.contextWindow.per * ai.up.contextWindow;
-  const speedOf = (ai) => (CONFIG.speed + CONFIG.upgrades.lowLatency.per * ai.up.lowLatency) * CLASSES[ai.cls].speed;
+  const speedOf = (ai) => (CONFIG.speed + CONFIG.upgrades.lowLatency.per * ai.up.lowLatency) * CLASSES[ai.cls].speed * (ai.mods ? ai.mods.speed : 1);
   const dashCooldownOf = (ai) => CLASSES[ai.cls].dashCd || CONFIG.dash.cooldown;
   const damageOf = (ai) => (CONFIG.damage + CONFIG.upgrades.biggerModel.per * ai.up.biggerModel) * (ai.aug.glassCannon ? CONFIG.aug.glassDamage : 1);
   const critChanceOf = (ai) => CONFIG.critChance + (ai.aug.critThinking ? CONFIG.aug.critThinking : 0) + (CLASSES[ai.cls].crit || 0);
@@ -234,7 +242,7 @@
   const regenOf = (ai) => CONFIG.regen + CONFIG.upgrades.redundancy.regen * ai.up.redundancy;
   const resistOf = (ai) => 1 - CONFIG.upgrades.alignment.per * ai.up.alignment;
   function fireIntervalOf(ai) {
-    const t = CONFIG.fireInterval * (1 - CONFIG.upgrades.overclock.per) ** ai.up.overclock;
+    const t = CONFIG.fireInterval * (1 - CONFIG.upgrades.overclock.per) ** ai.up.overclock * (ai.mods ? ai.mods.fire : 1);
     return ai.fx.gpuBoost > 0 ? t / 2 : t;
   }
   const alive = (ai) => ai && !ai.dead;
@@ -325,7 +333,13 @@
 
   function fire(g, ai, target) {
     const n = 1 + ai.up.parallelism + (ai.aug.moe ? CONFIG.aug.moeShots : 0);
-    let base = Math.atan2(target.y - ai.y, target.x - ai.x);
+    let tx = target.x, ty = target.y;
+    if (ai.mods && ai.mods.lead && target.input && !(target.fx && target.fx.sessionLimit > 0)) {  // aim where the target is going
+      const t = Math.sqrt(dist2(ai, target)) / CONFIG.bulletSpeed, sp = speedOf(target);
+      tx += target.input.ax * sp * t; ty += target.input.ay * sp * t;
+    }
+    let base = Math.atan2(ty - ai.y, tx - ai.x);
+    if (ai.mods && ai.mods.aimJitter) base += (Math.random() - 0.5) * 2 * ai.mods.aimJitter;
     if (ai.fx.hallucination > 0) base = Math.random() * Math.PI * 2;
     const spread = (CONFIG.fan * Math.PI) / 180;
     const life = rangeOf(ai) / CONFIG.bulletSpeed;
@@ -493,9 +507,37 @@
     }
     const dx = tx - ai.x, dy = ty - ai.y, len = Math.hypot(dx, dy) || 1;
     ai.input.ax = dx / len; ai.input.ay = dy / len;
-    if (ai.item && (CONFIG.items[ai.item].self || nearestTarget(g, ai, rangeOf(ai), false))) ai.wantUse = true;
-    if (ai.choices.length) ai.wantPick = Math.floor(Math.random() * ai.choices.length);
-    if (flee && ai.hp < ai.maxHp * 0.5 && ai.dashCd <= 0 && Math.random() < 0.05) ai.wantDash = true;
+    const m = ai.mods || CONFIG.difficulty.medium;
+    if (ai.item && Math.random() < m.itemUse && (CONFIG.items[ai.item].self || nearestTarget(g, ai, rangeOf(ai), false))) ai.wantUse = true;
+    if (ai.choices.length) ai.wantPick = m.smart ? bestPick(ai) : Math.floor(Math.random() * ai.choices.length);
+    if (m !== CONFIG.difficulty.easy && flee && ai.hp < ai.maxHp * 0.5 && ai.dashCd <= 0 && Math.random() < 0.05) ai.wantDash = true;
+    if (m.smart) {
+      // focus the weakest enemy in range
+      let weak = null, r2 = rangeOf(ai) ** 2;
+      for (const o of g.ais.values()) if (o !== ai && !o.dead && dist2(ai, o) <= r2 && (!weak || o.hp < weak.hp)) weak = o;
+      ai.focus = weak ? weak.id : 0;
+    }
+    if (m.dodge && ai.dashCd <= 0) {
+      // dash when an enemy shot is about to hit
+      for (const b of g.bullets) {
+        if (b.owner === ai.id) continue;
+        const dx2 = ai.x - b.x, dy2 = ai.y - b.y;
+        if (dx2 * dx2 + dy2 * dy2 < 160 * 160 && dx2 * b.vx + dy2 * b.vy > 0) {
+          if (Math.random() < m.dodge) { ai.wantDash = true; ai.input.ax = -b.vy / CONFIG.bulletSpeed; ai.input.ay = b.vx / CONFIG.bulletSpeed; }
+          break;
+        }
+      }
+    }
+  }
+
+  // Try-hard bots: prismatic > gold > silver augments; damage and fire rate first among upgrades.
+  const PICK_ORDER = ['overclock', 'parallelism', 'biggerModel', 'contextWindow', 'redundancy', 'lowLatency', 'alignment'];
+  const RARITY_ORDER = { prismatic: 0, gold: 1, silver: 2 };
+  function bestPick(ai) {
+    const score = (k) => (ai.kind === 'aug' ? RARITY_ORDER[AUGMENTS[k].rarity] : PICK_ORDER.indexOf(k));
+    let best = 0;
+    ai.choices.forEach((k, i) => { if (score(k) < score(ai.choices[best])) best = i; });
+    return best;
   }
 
   function endRound(g) {
