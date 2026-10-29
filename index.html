@@ -32,6 +32,10 @@
   #menu .row button:hover { background: rgba(61,242,255,.22); }
   #menu .row.diff button { padding: 7px 8px; font-size: 12px; font-weight: 400; border-color: #24365c; background: transparent; opacity: .75; }
   #menu .row.diff button.on { border-color: var(--accent); background: rgba(61,242,255,.18); opacity: 1; font-weight: 700; }
+  #audioPanel { margin-top: 10px; padding: 10px 12px; border: 1px solid #24365c; border-radius: 10px; display: grid; gap: 8px; text-align: left; font-size: 13px; }
+  #audioPanel label { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  #audioPanel input[type=range] { flex: 1; max-width: 200px; accent-color: var(--accent); }
+  #audioPanel small { opacity: .65; }
   #menu .row.small button { padding: 9px 10px; font-size: 13px; font-weight: 400; border-color: #24365c; background: transparent; }
   #classes { display: flex; gap: 8px; margin-top: 12px; }
   #classes button { flex: 1; padding: 10px 6px; border-radius: 10px; border: 1px solid #24365c; background: #0b1222; text-align: center; }
@@ -225,7 +229,13 @@
     <div class="row diff" id="diffRow" role="radiogroup" aria-label="Single-player difficulty">
       <button data-d="easy">Easy</button><button data-d="medium">Medium</button><button data-d="tryhard">Try hard</button></div>
     <div class="row"><button id="singleBtn">Single player</button><button id="multiBtn">Multiplayer</button></div>
-    <div class="row small"><button id="customBtn">Custom game</button><button id="controlsBtn">Controls</button><button id="skinsBtn">Skins</button></div>
+    <div class="row small"><button id="customBtn">Custom game</button><button id="controlsBtn">Controls</button><button id="skinsBtn">Skins</button><button id="audioBtn">Audio</button></div>
+    <div id="audioPanel" hidden role="group" aria-label="Audio settings">
+      <label><input type="checkbox" id="musicOn"> Music</label>
+      <label>Music volume <input type="range" id="musicVol" min="0" max="100" step="5"></label>
+      <label>Effects volume <input type="range" id="sfxVol" min="0" max="100" step="5"></label>
+      <small>M mutes everything · N turns only the music on/off</small>
+    </div>
     <div id="skinLine"></div>
     <div id="menuMsg"></div>
     <div class="help" id="help"></div>
@@ -342,16 +352,32 @@ function bodyPath(a) {
 const fxSize = (name, r, dflt) => (((A.fx || {})[name] || {}).size || dflt) * r;
 
 // ---------- audio (WebAudio synth from assets.js recipes) ----------
-const audio = { ctx: null, master: null, noise: null, muted: false };
-try { audio.muted = localStorage.getItem('takeover.mute') === '1'; } catch {}
+// master (M mutes everything) → music bus + effects bus, each with its own saved volume
+const audio = { ctx: null, master: null, musicBus: null, sfxBus: null, noise: null, muted: false, musicOn: true, musicVol: 0.45, sfxVol: 1 };
+try {
+  audio.muted = localStorage.getItem('takeover.mute') === '1';
+  Object.assign(audio, JSON.parse(localStorage.getItem('takeover.audio') || '{}'));
+} catch {}
+function applyVolumes() {
+  if (!audio.ctx) return;
+  audio.master.gain.value = audio.muted ? 0 : 0.8;
+  audio.musicBus.gain.value = audio.musicOn ? audio.musicVol : 0;
+  audio.sfxBus.gain.value = audio.sfxVol;
+}
+function saveAudio() {
+  try { localStorage.setItem('takeover.audio', JSON.stringify({ musicOn: audio.musicOn, musicVol: audio.musicVol, sfxVol: audio.sfxVol })); } catch {}
+  applyVolumes();
+}
 function ensureAudio() {
   if (audio.ctx) { if (audio.ctx.state === 'suspended') audio.ctx.resume(); return; }
   const AC = window.AudioContext || window.webkitAudioContext;
   if (!AC) return;
   audio.ctx = new AC();
   audio.master = audio.ctx.createGain();
-  audio.master.gain.value = audio.muted ? 0 : 0.8;
   audio.master.connect(audio.ctx.destination);
+  audio.musicBus = audio.ctx.createGain(); audio.musicBus.connect(audio.master);
+  audio.sfxBus = audio.ctx.createGain(); audio.sfxBus.connect(audio.master);
+  applyVolumes();
   const len = audio.ctx.sampleRate;
   audio.noise = audio.ctx.createBuffer(1, len, len);
   const d = audio.noise.getChannelData(0);
@@ -360,15 +386,15 @@ function ensureAudio() {
 function setMute(m) {
   audio.muted = m;
   try { localStorage.setItem('takeover.mute', m ? '1' : '0'); } catch {}
-  if (audio.master) audio.master.gain.value = m ? 0 : 0.8;
+  applyVolumes();
   $('muteBtn').textContent = touchScreen ? (m ? '🔇' : '🔊') : m ? 'Sound off' : 'Sound on';
 }
-function playPart(p, t, dur) {
+function playPart(p, t, dur, bus) {
   const ctx = audio.ctx, g = ctx.createGain();
   const [f0, f1] = p.freq || [440, 440];
   g.gain.setValueAtTime(p.vol == null ? 0.2 : p.vol, t);
   g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  g.connect(audio.master);
+  g.connect(bus || audio.sfxBus);
   if (p.wave === 'noise') {
     const src = ctx.createBufferSource(), f = ctx.createBiquadFilter();
     src.buffer = audio.noise; f.type = 'lowpass';
@@ -396,28 +422,37 @@ function noteFreq(n) {
   const midi = (Number(m[3]) + 1) * 12 + SEMI[m[1]] + (m[2] === '#' ? 1 : m[2] === 'b' ? -1 : 0);
   return 440 * 2 ** ((midi - 69) / 12);
 }
-const music = { timer: null, next: 0, step: 0, fast: false, track: null };
-function musicPlay(track) {
+const music = { timer: null, next: 0, step: 0, fast: false, track: null, match: false, round: Math.floor(Math.random() * 4) };
+// Arrangement: which instruments play in each pass of the loop (columns = the track's instruments in order),
+// so a long match builds up and breaks down instead of repeating one identical loop. The last 30 s play everything.
+const ARRANGEMENT = [[1, 0, 0, 1], [1, 1, 0, 1], [1, 1, 1, 1], [1, 1, 1, 1], [1, 0, 1, 0], [1, 1, 0, 1], [1, 1, 1, 1], [1, 0, 0, 0]];
+const matchTracks = () => [A.music, ...(A.musicTracks || [])].filter((t) => t && t.tracks);
+function musicPlay(track, isMatch) {
   if (!audio.ctx || !track || !track.tracks) return;
   if (music.timer && music.track === track) return;
   musicStop();
-  music.track = track; music.next = audio.ctx.currentTime + 0.05; music.step = 0;
+  music.track = track; music.match = !!isMatch; music.next = audio.ctx.currentTime + 0.05; music.step = 0;
   music.timer = setInterval(() => {
-    const M = music.track, stepDur = 60 / M.bpm / 4 / (music.fast && M === A.music ? 1.25 : 1);
+    const M = music.track, stepDur = 60 / M.bpm / 4 / (music.fast && music.match ? 1.25 : 1);
+    const loopLen = M.steps || 64;
     if (music.next < audio.ctx.currentTime) music.next = audio.ctx.currentTime + 0.02;  // background tab: skip, don't burst
     while (music.next < audio.ctx.currentTime + 0.12) {
-      if (!audio.muted) for (const tr of M.tracks) {
+      const parts = music.match && !music.fast ? ARRANGEMENT[Math.floor(music.step / loopLen) % ARRANGEMENT.length] : null;
+      if (!audio.muted && audio.musicOn) M.tracks.forEach((tr, i) => {
+        if (parts && i < parts.length && !parts[i]) return;
         const n = tr.notes[music.step % tr.notes.length];
-        if (!n) continue;
+        if (!n) return;
         const f = noteFreq(n);
         const noise = tr.wave === 'noise';
-        playPart({ wave: tr.wave, freq: [f, noise ? f : f], vol: tr.vol }, music.next, stepDur * (noise ? 0.6 : 0.9));
-      }
+        playPart({ wave: tr.wave, freq: [f, f], vol: tr.vol }, music.next, stepDur * (noise ? 0.6 : 0.9), audio.musicBus);
+      });
       music.step++; music.next += stepDur;
     }
   }, 25);
 }
-function musicStart() { musicPlay(A.music); }
+// a different match track every round
+function musicStart() { const list = matchTracks(); if (list.length) musicPlay(list[music.round % list.length], true); }
+function nextRoundMusic() { music.round++; if (S.mode) musicStart(); }
 function musicStop() { clearInterval(music.timer); music.timer = null; music.track = null; }
 function menuMusic() { if (!S.mode && !$('menu').hidden) musicPlay(A.menuMusic); }
 
@@ -577,7 +612,7 @@ function startSingle() {
   S.cur = G.snapshot(S.game, S.meId);
   S.lastXp = S.cur.me ? S.cur.me.xp : 0;  // a custom start level doesn't count as earned XP
   S.countLifetime = !window.Settings || Settings.isDefault();  // custom games don't unlock skins
-  musicStart();
+  nextRoundMusic();
 }
 function startMulti() {
   ensureAudio(); sfx('click');
@@ -626,7 +661,7 @@ function startMulti() {
 }
 function onNet(m) {
   if (m.t === 'full') { S.full = true; return; }
-  if (m.t === 'welcome') { S.meId = m.id; applyPk({ add: m.packets, del: [] }); musicStart(); return; }
+  if (m.t === 'welcome') { S.meId = m.id; applyPk({ add: m.packets, del: [] }); nextRoundMusic(); return; }
   if (m.t !== 'snap') return;
   applyPk(m.pk);
   m.time = performance.now();
@@ -661,6 +696,18 @@ for (const b of $('diffRow').children) b.onclick = () => {
   try { localStorage.setItem('takeover.difficulty', difficulty); } catch {}
 };
 paintDifficulty();
+// Audio panel in the menu: music on/off and separate music / effects volume, saved in the browser.
+function paintAudio() {
+  $('musicOn').checked = audio.musicOn;
+  $('musicVol').value = Math.round(audio.musicVol * 100);
+  $('sfxVol').value = Math.round(audio.sfxVol * 100);
+}
+$('audioBtn').onclick = () => { ensureAudio(); sfx('click'); $('audioPanel').hidden = !$('audioPanel').hidden; paintAudio(); };
+$('musicOn').onchange = () => { audio.musicOn = $('musicOn').checked; saveAudio(); };
+$('musicVol').oninput = () => { audio.musicVol = $('musicVol').value / 100; saveAudio(); };
+$('sfxVol').oninput = () => { audio.sfxVol = $('sfxVol').value / 100; saveAudio(); };
+$('sfxVol').onchange = () => sfx('collect');  // preview the new effects volume
+paintAudio();
 $('singleBtn').onclick = firstRun(startSingle);
 $('multiBtn').onclick = firstRun(startMulti);
 $('controlsBtn').onclick = () => { sfx('click'); if (window.Controls) Controls.openModal({ onClose: renderHelp }); };
@@ -868,6 +915,7 @@ addEventListener('keydown', (e) => {
   else if (is('pick2', ['2'])) { S.pick = 1; sendNow(); }
   else if (is('pick3', ['3'])) { S.pick = 2; sendNow(); }
   else if (is('mute', ['m'])) setMute(!audio.muted);
+  else if (e.key.toLowerCase() === 'n') { audio.musicOn = !audio.musicOn; saveAudio(); paintAudio(); showMsg(audio.musicOn ? 'Music on' : 'Music off', 1); }
   else if (is('menu', ['q'])) toMenu();
   else if (is('pause', ['p', 'escape']) && S.mode === 'single') S.paused = !S.paused;
 });
@@ -1090,7 +1138,7 @@ function handleEvents(events) {
       }
       case 'feed': S.feed.unshift({ text: ev.text, t: performance.now() }); S.feed.length = Math.min(S.feed.length, 4); break;
       case 'takeover': sfx('takeover'); break;
-      case 'round': sfx('go'); break;
+      case 'round': sfx('go'); nextRoundMusic(); break;
     }
   }
 }

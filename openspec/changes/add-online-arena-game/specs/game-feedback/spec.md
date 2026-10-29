@@ -28,7 +28,7 @@ During a match the HUD SHALL show: the round countdown, the player's level and a
 
 ### Requirement: Music
 
-A chiptune music loop SHALL start with the first match after the player's first click or tap, and SHALL play 25% faster during the last 30 seconds of a round.
+Music SHALL start after the player's first click or tap: a menu track in the menu and a match track in a match. Each round and each new match SHALL use the next of the available match tracks, its instruments SHALL enter and drop out from one loop to the next so it never repeats identically, and the last 30 seconds of a round SHALL play the full arrangement 25% faster.
 
 #### Scenario: Final 30 seconds
 - **WHEN** the round countdown reaches 0:30
@@ -41,6 +41,18 @@ The game SHALL play a short synthesized sound for: firing, being hit, collecting
 #### Scenario: Level up
 - **WHEN** the player's AI levels up
 - **THEN** a rising level-up sound plays
+
+### Requirement: Music and effects volume
+
+The menu SHALL offer separate controls for music (on/off and volume) and sound effects (volume), remembered by the browser; the N key SHALL turn only the music on or off. Music SHALL default to a lower volume than effects.
+
+#### Scenario: Music off, effects on
+- **WHEN** the player turns music off in the Audio panel or with N
+- **THEN** the music stops, effects keep playing, and the choice is still set after a reload
+
+#### Scenario: New round, new track
+- **WHEN** a round ends and the next one starts
+- **THEN** a different match track plays, if more than one is available
 
 ### Requirement: Mute
 

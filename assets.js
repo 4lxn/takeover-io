@@ -875,6 +875,128 @@
       ],
     },
 
+    // Extra match loops, same shape as music (which stays track 0). The client rotates them per round and fades
+    // instruments in and out per loop, so every line stands on its own. Sparser and softer than track 0.
+    musicTracks: [
+      { // A: dark E minor (Em-C-Am-B), 110 bpm, syncopated bass
+        bpm: 110,
+        steps: 64,
+        tracks: [
+          {
+            wave: 'triangle', vol: 0.35, // bass
+            notes: seq(
+              'E2 - - E2 - - E3 - E2 - - B2 - - E2 - ' +
+              'C2 - - C2 - - C3 - C2 - - G2 - - C2 - ' +
+              'A1 - - A1 - - A2 - A1 - - E2 - - A1 - ' +
+              'B1 - - B1 - - B2 - B1 - - F#2 - - B1 -'
+            ),
+          },
+          {
+            wave: 'square', vol: 0.035, // arpeggio
+            notes: seq(
+              'E4 - G4 - B4 - - - E5 - B4 - G4 - - - ' +
+              'E4 - G4 - C5 - - - E5 - C5 - G4 - - - ' +
+              'E4 - A4 - C5 - - - E5 - C5 - A4 - - - ' +
+              'D#4 - F#4 - B4 - - - D#5 - B4 - F#4 - - -'
+            ),
+          },
+          {
+            wave: 'sine', vol: 0.11, // lead
+            notes: seq(
+              'B4 - - - - - - - A4 - G4 - - - - - ' +
+              'E4 - - - - - - - - - - - G4 - - - ' +
+              'A4 - - - - - - - C5 - B4 - - - - - ' +
+              'F#4 - - - - - - - - - - - D#4 - - -'
+            ),
+          },
+          {
+            wave: 'noise', vol: 0.24, // drums: kick follows the bass syncopation
+            notes: seq(
+              'C3 - C8 - C6 - C3 - C8 - C3 - C6 - C8 - '.repeat(3) +
+              'C3 - C8 - C6 - C3 - C8 - C3 C6 C6 - C6 C6'
+            ),
+          },
+        ],
+      },
+      { // B: upbeat G major (G-D-Em-C), 128 bpm
+        bpm: 128,
+        steps: 64,
+        tracks: [
+          {
+            wave: 'triangle', vol: 0.3, // bass
+            notes: seq(
+              'G2 - G3 - - - G2 - G3 - - - D3 - G3 - ' +
+              'D2 - D3 - - - D2 - D3 - - - A2 - D3 - ' +
+              'E2 - E3 - - - E2 - E3 - - - B2 - E3 - ' +
+              'C2 - C3 - - - C2 - C3 - - - G2 - C3 -'
+            ),
+          },
+          {
+            wave: 'square', vol: 0.03, // arpeggio: groups of three, then a breath
+            notes: seq(
+              'G4 B4 D5 - '.repeat(4) + 'F#4 A4 D5 - '.repeat(4) +
+              'G4 B4 E5 - '.repeat(4) + 'G4 C5 E5 - '.repeat(4)
+            ),
+          },
+          {
+            wave: 'square', vol: 0.045, // lead
+            notes: seq(
+              'D5 - - - B4 - - - D5 - - - G5 - - - ' +
+              'F#5 - - - - - - - E5 - - - D5 - - - ' +
+              'E5 - - - G5 - - - B4 - - - - - - - ' +
+              'C5 - - - E5 - - - D5 - - - - - - -'
+            ),
+          },
+          {
+            wave: 'noise', vol: 0.22, // drums
+            notes: seq(
+              'C3 - C8 - C6 - C8 - C3 - C8 - C6 - C8 - '.repeat(3) +
+              'C3 - C8 - C6 - C8 - C3 - C8 - C6 - C8 C8'
+            ),
+          },
+        ],
+      },
+      { // C: tense half-time C minor (Cm-Cm-Db-G7), 96 bpm, sparse lead
+        bpm: 96,
+        steps: 64,
+        tracks: [
+          {
+            wave: 'triangle', vol: 0.35, // bass: pulsing pedal
+            notes: seq(
+              'C2 - - - C2 - - - C2 - - - C2 - - - '.repeat(2) +
+              'C#2 - - - C#2 - - - C#2 - - - C#2 - - - ' +
+              'G1 - - - G1 - - - G1 - - - B1 - - -'
+            ),
+          },
+          {
+            wave: 'square', vol: 0.03, // arpeggio
+            notes: seq(
+              'G4 - - - C5 - - - D#5 - - - C5 - - - ' +
+              'G4 - - - C5 - - - D#5 - - - G5 - - - ' +
+              'G#4 - - - C#5 - - - F5 - - - C#5 - - - ' +
+              'G4 - - - B4 - - - D5 - - - F5 - - -'
+            ),
+          },
+          {
+            wave: 'sine', vol: 0.12, // lead: a few notes, lots of space
+            notes: seq(
+              '- - - - - - - - G5 - - - - - - - ' +
+              '- - - - - - - - D#5 - - - F5 - - - ' +
+              '- - - - - - - - G#5 - - - - - - - ' +
+              '- - - - - - - - G5 - - - F5 - D5 -'
+            ),
+          },
+          {
+            wave: 'noise', vol: 0.22, // drums: kick on 1, snare on 3
+            notes: seq(
+              'C3 - C8 - - - C8 - C6 - C8 - - - C8 - '.repeat(3) +
+              'C3 - C8 - - - C8 - C6 - C8 - C3 - C6 C6'
+            ),
+          },
+        ],
+      },
+    ],
+
     // 4 bars of Am-F-C-G. One step = one 16th note (60 / bpm / 4 s); loop = 64 steps = 8 s at 120 bpm.
     // Noise track: the note's pitch is the lowpass cutoff. C3 = kick, C6 = snare, C8 = hat.
     music: {

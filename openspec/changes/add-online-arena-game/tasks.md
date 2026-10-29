@@ -60,6 +60,12 @@ Time budget: under 3 hours, in this order so a playable game exists as early as 
 - [x] 9.4 In the client, add damage and crit numbers, the "+N" kill popup, the announcer banner, explosions with camera shake and kick, hit sparks, bullet trails, the corrupted-data dissolution and kernel-panic reboot overlay with reassembly, the low-health vignette, rarity-colored augment cards, the dash button and cooldown ring, the focus reticle and the streak bounty aura; verify each in Chrome in single player
 - [x] 9.5 Multi-touch joystick, action buttons and mobile layout; verify with synthetic multi-touch in Chrome
 
+## 10. Audio comfort (added after the sound playtest: the music got tiring)
+
+- [x] 10.1 Split the music and effects buses with saved volumes, an Audio panel in the menu and the N key for music only; default music lower; verify in headless Chrome that N silences only music and the setting survives a reload
+- [x] 10.2 Rotate match tracks per round and per match, and vary the arrangement every loop; verify the track index advances on the round event
+- [ ] 10.3 Wire the Designer's extra match tracks (`ASSETS.musicTracks`) and verify by ear that consecutive rounds sound different
+
 ## Workflow follow-up
 
 - Archive the change with `/opsx:archive` after the playtest passes.
