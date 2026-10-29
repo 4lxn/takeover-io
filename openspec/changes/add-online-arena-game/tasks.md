@@ -37,7 +37,7 @@ Time budget: under 3 hours, in this order so a playable game exists as early as 
 
 ## 6. Assets, sound and effects (~20 min)
 
-- [ ] 6.1 Load `assets.js` from the Designer session (theme, palette grids with the `T` tint, per-color pre-rendered sprites, item and upgrade icons) with a fallback to placeholders for any missing key; verify with the Designer's file and again with `assets.js` renamed (the game must still run)
+- [x] 6.1 Load `assets.js` from the Designer session (theme, palette grids with the `T` tint, per-color pre-rendered sprites, item and upgrade icons) with a fallback to placeholders for any missing key; verify with the Designer's file and again with `assets.js` renamed (the game must still run)
 - [ ] 6.2 Add WebAudio sound effects from `ASSETS.sfx` (own shots only), the music step sequencer with a 25% speed-up in the last 30 s, start on first click, and M or the mute button with `localStorage`; verify by ear and that mute survives a reload
 - [x] 6.3 Add the visual effects: screen shake when hit, a deletion particle burst, floating +XP, reboot blinking, a Firewall bubble, a GPU Boost glow, the "Session limit reached" label, and the Hallucination glitch with ghosts on the victim's screen only; verify each one in single player
 
@@ -45,12 +45,12 @@ Time budget: under 3 hours, in this order so a playable game exists as early as 
 
 - [x] 7.1 Create a GitHub repository and push (ask the user first: this publishes the code); verify the repository page shows the files
 - [x] 7.2 Create a free Render web service (`npm install`, `npm start`), confirming the free-tier limits on render.com first; verify a browser can open the WebSocket at the service URL
-- [ ] 7.3 Create a free Render static site for `index.html`, `game.js` and `assets.js`, and set `WS_URL` to the web service; verify single player loads instantly and multiplayer works between a phone and a laptop
+- [x] 7.3 Create a free Render static site for `index.html`, `game.js` and `assets.js`, and set `WS_URL` to the web service; verify single player loads instantly and multiplayer works between a phone and a laptop
 - [x] 7.4 Add a "Deploy" section to `README.md` with the two Render services and `WS_URL`; verify it matches what was configured
 
 ## 8. Integration check (~15 min)
 
-- [ ] 8.1 Playtest a full round in each mode against the spec scenarios (menu, round and takeover, upgrades, every item, bots, capacity message, mute), tune only `CONFIG`, and run `npm test`; verify all tests pass and no scenario fails
+- [x] 8.1 Playtest a full round in each mode against the spec scenarios (menu, round and takeover, upgrades, every item, bots, capacity message, mute), tune only `CONFIG`, and run `npm test`; verify all tests pass and no scenario fails
 
 ## 9. Depth and game feel (added during apply at the user's request)
 
