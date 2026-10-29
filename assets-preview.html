@@ -21,7 +21,7 @@
 <h2>decor (on the arena bg)</h2><div class="row" id="decor"></div>
 <h2>logo</h2><div class="row" id="logo"></div>
 <h2>sfx</h2><div class="row" id="sfx"></div>
-<h2>music</h2><div class="row"><button id="music">play music</button><button id="fast">play fast (x1.25)</button><button id="menu">play menu music</button></div>
+<h2>music</h2><div class="row"><button id="music">play music</button><button id="fast">play fast (x1.25)</button><button id="menu">play menu music</button><span id="more" style="display:contents"></span></div>
 <script src="assets.js"></script>
 <script>
   const A = window.ASSETS, SCALE = 4, anims = [];
@@ -108,7 +108,7 @@
   const hz = n => 440 * 2 ** ((SEMI[n[0]] + (n[1] === '#' ? 1 : 0) + (+n.at(-1) - 4) * 12) / 12);
   let timer = null;
   function toggleMusic(song, speed, btn) {
-    if (timer) { clearInterval(timer); timer = null; document.querySelectorAll('#music,#fast,#menu').forEach(b => b.textContent = b.textContent.replace('stop', 'play')); return; }
+    if (timer) { clearInterval(timer); timer = null; document.querySelectorAll('.row button').forEach(b => b.textContent = b.textContent.replace('stop', 'play')); return; }
     audio();
     const stepSec = 60 / (song.bpm * speed) / 4;
     let step = 0, next = ac.currentTime + 0.05;
@@ -126,4 +126,10 @@
   document.getElementById('music').onclick = e => toggleMusic(A.music, 1, e.target);
   document.getElementById('fast').onclick = e => toggleMusic(A.music, 1.25, e.target);
   document.getElementById('menu').onclick = e => toggleMusic(A.menuMusic, 1, e.target);
+  (A.musicTracks || []).forEach((song, i) => {
+    const b = document.createElement('button');
+    b.textContent = `play match track ${i + 1} (${song.bpm} bpm)`;
+    b.onclick = () => toggleMusic(song, 1, b);
+    document.getElementById('more').append(b);
+  });
 </script>
