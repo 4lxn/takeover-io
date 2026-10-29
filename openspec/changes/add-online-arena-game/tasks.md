@@ -64,7 +64,7 @@ Time budget: under 3 hours, in this order so a playable game exists as early as 
 
 - [x] 10.1 Split the music and effects buses with saved volumes, an Audio panel in the menu and the N key for music only; default music lower; verify in headless Chrome that N silences only music and the setting survives a reload
 - [x] 10.2 Rotate match tracks per round and per match, and vary the arrangement every loop; verify the track index advances on the round event
-- [ ] 10.3 Wire the Designer's extra match tracks (`ASSETS.musicTracks`) and verify by ear that consecutive rounds sound different
+- [x] 10.3 Wire the Designer's extra match tracks (`ASSETS.musicTracks`) and verify by ear that consecutive rounds sound different
 
 ## Workflow follow-up
 
