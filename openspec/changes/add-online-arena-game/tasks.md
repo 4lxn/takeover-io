@@ -38,7 +38,7 @@ Time budget: under 3 hours, in this order so a playable game exists as early as 
 ## 6. Assets, sound and effects (~20 min)
 
 - [x] 6.1 Load `assets.js` from the Designer session (theme, palette grids with the `T` tint, per-color pre-rendered sprites, item and upgrade icons) with a fallback to placeholders for any missing key; verify with the Designer's file and again with `assets.js` renamed (the game must still run)
-- [ ] 6.2 Add WebAudio sound effects from `ASSETS.sfx` (own shots only), the music step sequencer with a 25% speed-up in the last 30 s, start on first click, and M or the mute button with `localStorage`; verify by ear and that mute survives a reload
+- [x] 6.2 Add WebAudio sound effects from `ASSETS.sfx` (own shots only), the music step sequencer with a 25% speed-up in the last 30 s, start on first click, and M or the mute button with `localStorage`; verify by ear and that mute survives a reload
 - [x] 6.3 Add the visual effects: screen shake when hit, a deletion particle burst, floating +XP, reboot blinking, a Firewall bubble, a GPU Boost glow, the "Session limit reached" label, and the Hallucination glitch with ghosts on the victim's screen only; verify each one in single player
 
 ## 7. Deploy (~20 min, needs the user)
