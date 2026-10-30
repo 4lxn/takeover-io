@@ -40,7 +40,7 @@ Steps marked **(user)** need Alan: accounts and keys only he can create. Secrets
 
 ## 7. Deploy and end-to-end check
 
-- [ ] 7.1 **(user, guided)** Set the Render env vars (server: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`; static site: `SUPABASE_URL`, `SUPABASE_ANON_KEY`) and the static build step that writes `config.js`; deploy the server, then the client; verify that an old cached client still joins a public room and the new client signs in
+- [x] 7.1 **(user, guided)** Set the Render env vars (server: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`; static site: `SUPABASE_URL`, `SUPABASE_ANON_KEY`) and the static build step that writes `config.js`; deploy the server, then the client; verify that an old cached client still joins a public room and the new client signs in
 - [ ] 7.2 End-to-end in production: a guest on a phone plays multiplayer and XP is saved → upgrades with Google → signs in on the laptop and sees the same progress; an event room through lobby and QR; single-player daily cap; account deletion; `npm test` passes
 
 ## Workflow follow-up

@@ -1,6 +1,7 @@
-# Render Blueprint: New → Blueprint → pick this repo. Creates both free services.
+# Render Blueprint: New → Blueprint → pick this repo. Creates both services.
+# Secrets are not stored here: set them in the dashboard (marked sync: false).
 services:
-  # WebSocket game server (free plan sleeps after ~15 min idle; multiplayer waits ~1 min to wake it)
+  # WebSocket game server: rooms, token verification, crediting, account deletion
   - type: web
     name: takeover-io-server
     runtime: node
@@ -8,12 +9,17 @@ services:
     buildCommand: npm install
     startCommand: node server.js
     healthCheckPath: /
+    envVars:
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY   # server only: never expose to clients
+        sync: false
 
-  # Client as a static site (always on, CDN), pointed at the server above
+  # Client as a static site (always on, CDN): writes config.js and points the client at the server
   - type: web
     name: takeover-io
     runtime: static
-    buildCommand: sed -i "s#const WS_URL = '';#const WS_URL = 'wss://$WS_HOST';#" index.html
+    buildCommand: node scripts/write-config.js && sed -i "s#const WS_URL = '';#const WS_URL = 'wss://$WS_HOST';#" index.html
     staticPublishPath: .
     envVars:
       - key: WS_HOST
@@ -21,3 +27,7 @@ services:
           type: web
           name: takeover-io-server
           property: host
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY   # public (sb_publishable_…), goes into config.js
+        sync: false
