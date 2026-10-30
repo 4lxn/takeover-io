@@ -36,6 +36,12 @@
   #audioPanel label { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
   #audioPanel input[type=range] { flex: 1; max-width: 200px; accent-color: var(--accent); }
   #audioPanel small { opacity: .65; }
+  #menu .row.rooms { align-items: stretch; }
+  #menu .row.rooms button { flex: 0 0 auto; padding: 9px 12px; font-size: 13px; font-weight: 400; border-color: #24365c; background: transparent; }
+  #roomCode { flex: 1; min-width: 0; padding: 9px 10px; border-radius: 10px; border: 1px solid #24365c; background: #0b1222; color: var(--text);
+    font: inherit; font-size: 16px; letter-spacing: 4px; text-transform: uppercase; text-align: center; }
+  #roomChip { position: fixed; left: 50%; top: calc(46px + var(--sat, 0px)); transform: translateX(-50%); padding: 4px 10px; border-radius: 8px;
+    border: 1px solid var(--accent); background: rgba(10,16,30,.85); font-size: 12px; cursor: pointer; }
   #menu .row.small button { padding: 9px 10px; font-size: 13px; font-weight: 400; border-color: #24365c; background: transparent; }
   #classes { display: flex; gap: 8px; margin-top: 12px; }
   #classes button { flex: 1; padding: 10px 6px; border-radius: 10px; border: 1px solid #24365c; background: #0b1222; text-align: center; }
@@ -182,6 +188,36 @@
     filter: drop-shadow(0 0 12px rgba(61,242,255,.55)); }
   #classes button img { width: 24px; height: 24px; display: block; margin: 0 auto 4px; }
   #skinLine { margin-top: 10px; font-size: 12px; opacity: .85; }
+  #acctLine { margin-top: 8px; display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; font-size: 12px; }
+  #acctLine button { padding: 5px 10px; border-radius: 8px; border: 1px solid #24365c; background: transparent; font-size: 12px; }
+  #acctLine button.save { border-color: #ffe14d; color: #ffe14d; }
+  #acctNote { width: 100%; opacity: .7; }
+  #privacyLink { color: inherit; opacity: .8; }
+  .modal { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; background: rgba(2,4,10,.72); }
+  .modal .panel2 { width: min(520px, 94vw); max-height: 86vh; overflow: auto; background: rgba(10,16,30,.96); border: 1px solid #24365c;
+    border-radius: 12px; padding: 16px; text-align: left; }
+  .modal h2 { margin: 0 0 4px; color: var(--accent); font-size: 20px; }
+  .modal h3 { margin: 14px 0 6px; font-size: 13px; letter-spacing: 1px; text-transform: uppercase; opacity: .8; }
+  .modal button { padding: 8px 12px; border-radius: 8px; border: 1px solid #24365c; background: #0b1222; }
+  .modal button.primary { border-color: var(--accent); background: rgba(61,242,255,.12); font-weight: 700; }
+  .modal button.danger { border-color: var(--danger); color: var(--danger); }
+  .modal button:disabled { opacity: .4; cursor: not-allowed; }
+  .modal input { padding: 8px 10px; border-radius: 8px; border: 1px solid #24365c; background: #0b1222; color: var(--text); font: inherit; min-width: 0; }
+  .modal .line { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin: 6px 0; }
+  .modal .line input { flex: 1; }
+  .modal .msg { min-height: 1.3em; color: #ffe14d; font-size: 13px; margin-top: 8px; }
+  .modal .close { float: right; }
+  .modal small { opacity: .7; }
+  .modal a { color: var(--accent); }
+  #profStats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  #profStats div { background: #0b1222; border: 1px solid #1b2a48; border-radius: 8px; padding: 6px 8px; font-size: 12px; }
+  #profStats b { display: block; font-size: 18px; color: var(--accent); }
+  .tabs { display: flex; gap: 6px; } .tabs button.on { border-color: var(--accent); background: rgba(61,242,255,.12); }
+  .rows { list-style: none; margin: 6px 0 0; padding: 0; font-size: 13px; }
+  .rows li { display: flex; justify-content: space-between; gap: 8px; padding: 3px 6px; border-bottom: 1px solid #16223a; }
+  .rows li.me { color: var(--accent); font-weight: 700; background: rgba(61,242,255,.08); }
+  #savedNote { position: fixed; left: 50%; bottom: calc(110px + var(--sab, 0px)); transform: translateX(-50%); z-index: 75; padding: 8px 14px;
+    border-radius: 10px; border: 1px solid var(--ok); background: rgba(10,16,30,.92); color: var(--ok); font-weight: 700; pointer-events: none; }
   #skinsModal { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; background: rgba(2,4,10,.72); }
   #skinsModal .panel2 { width: min(560px, 94vw); max-height: 86vh; overflow: auto; background: rgba(10,16,30,.96); border: 1px solid #24365c;
     border-radius: 12px; padding: 16px; text-align: center; }
@@ -228,7 +264,9 @@
     <div id="classes"></div>
     <div class="row diff" id="diffRow" role="radiogroup" aria-label="Single-player difficulty">
       <button data-d="easy">Easy</button><button data-d="medium">Medium</button><button data-d="tryhard">Try hard</button></div>
-    <div class="row"><button id="singleBtn">Single player</button><button id="multiBtn">Multiplayer</button></div>
+    <div class="row"><button id="singleBtn">Single player</button><button id="multiBtn">Play online</button></div>
+    <div class="row rooms"><button id="createRoomBtn">Create room</button>
+      <input id="roomCode" maxlength="5" placeholder="CODE" autocomplete="off" spellcheck="false" aria-label="Room code"><button id="joinRoomBtn">Join</button></div>
     <div class="row small"><button id="customBtn">Custom game</button><button id="controlsBtn">Controls</button><button id="skinsBtn">Skins</button><button id="audioBtn">Audio</button></div>
     <div id="audioPanel" hidden role="group" aria-label="Audio settings">
       <label><input type="checkbox" id="musicOn"> Music</label>
@@ -237,8 +275,10 @@
       <small>M mutes everything · N turns only the music on/off</small>
     </div>
     <div id="skinLine"></div>
+    <div id="acctLine"><button id="acctBtn" hidden></button><button id="profBtn" hidden>Profile &amp; leaderboards</button><span id="acctNote"></span></div>
     <div id="menuMsg"></div>
     <div class="help" id="help"></div>
+    <div class="help"><a href="privacy.html" target="_blank" rel="noopener" id="privacyLink">Privacy</a></div>
   </div>
 </div>
 
@@ -248,6 +288,7 @@
   <div id="topRight" class="panel"><ol id="board"></ol></div>
   <div id="feed"></div>
   <button id="menuBtn" class="hudBtn">Menu</button>
+  <button id="roomChip" hidden></button>
   <button id="muteBtn" class="hudBtn"></button>
   <button id="fsBtn" class="hudBtn" aria-label="Fullscreen">⛶</button>
   <div id="fsHint" role="status"></div>
@@ -258,13 +299,42 @@
   <button id="dash"><span id="dashLbl">Shift</span></button>
   <div id="announce" hidden><div class="at"></div><div class="an"></div></div>
   <div id="msg"></div>
+  <div id="savedNote" hidden role="status"></div>
   <div id="takeover" hidden aria-live="polite"><div><h2 id="toTitle"></h2><div id="toTop"></div><p id="toNext"></p></div></div>
 </div>
 
+<div id="acctModal" class="modal" hidden><div class="panel2" role="dialog" aria-label="Account">
+  <button class="close" id="acctClose">Close</button><h2>Account</h2><div id="acctStatus"></div>
+  <div id="acctUpgrade">
+    <h3 id="acctUpTitle">Save your progress</h3>
+    <div class="line"><button class="primary" id="acctApple">Continue with Apple</button><button class="primary" id="acctGoogle">Continue with Google</button></div>
+    <div class="line"><input id="acctEmail" type="email" placeholder="email@example.com" autocomplete="email"><button id="acctEmailSend">Email me a code</button></div>
+    <div class="line" id="acctCodeLine" hidden><input id="acctCode" inputmode="numeric" maxlength="6" placeholder="6-digit code" autocomplete="one-time-code"><button class="primary" id="acctCodeOk">Verify</button></div>
+    <div class="line"><small><a href="#" id="acctMode">Already have an account? Sign in instead</a></small></div>
+    <div class="line" id="acctConfirm" hidden><small id="acctConfirmText"></small><button class="danger" id="acctConfirmOk">Switch account</button></div>
+  </div>
+  <h3>Display name</h3>
+  <div class="line"><input id="acctName" maxlength="32" autocomplete="off" spellcheck="false"><button id="acctNameOk">Save</button></div>
+  <div class="line" id="acctSignOutLine"><button id="acctSignOut">Sign out</button><small><a href="privacy.html" target="_blank" rel="noopener">Privacy policy</a></small></div>
+  <h3>Delete account</h3>
+  <div class="line"><input id="acctDelInput" placeholder="type DELETE" autocomplete="off"><button class="danger" id="acctDelOk" disabled>Delete forever</button></div>
+  <small>Removes your account, progress and match history permanently.</small>
+  <div class="msg" id="acctMsg" role="status"></div>
+</div></div>
+<div id="profModal" class="modal" hidden><div class="panel2" role="dialog" aria-label="Profile and leaderboards">
+  <button class="close" id="profClose">Close</button><h2 id="profTitle">Profile</h2><div id="profLevel"></div>
+  <h3>Stats</h3><div id="profStats"></div>
+  <h3>Last matches</h3><ul class="rows" id="profHistory"></ul>
+  <h3>Leaderboards</h3><div class="tabs"><button id="lbAll" class="on">All time</button><button id="lbWeek">This week</button></div>
+  <ul class="rows" id="profBoard"></ul>
+</div></div>
 <div id="skinsModal" hidden><div class="panel2"><h2>Skins</h2><div id="skinInfo"></div><div class="xpbar2"><div id="skinBar"></div></div>
   <div id="skinGrid"></div><button id="skinsDone">Done</button></div></div>
 
 <script src="assets.js?v=10291731"></script>
+<script src="config.js?v=10291731"></script>
+<script src="vendor/supabase.js?v=10291731"></script>
+<script src="account.js?v=10291731"></script>
 <script src="menu-bg.js?v=10291731" defer></script>
 <script src="takeover-fx.js?v=10291731" defer></script>
 <script src="controls.js?v=10291731"></script>
@@ -512,8 +582,9 @@ const skinUnlocked = (s) => lifetimeXp >= tierXp(s.tier);
 function effectiveSkin() { const s = (A.skins || {})[selectedSkin]; return s && skinUnlocked(s) ? selectedSkin : null; }
 const nextSkin = () => skinList().find(([, s]) => !skinUnlocked(s));
 const classTint = () => (CLASS_TAG[selectedClass] ? CLASS_TAG[selectedClass][1] : THEME.accent);
+const accountLive = () => !!(window.Account && Account.state.ready);
 function saveLifetime() {
-  if (!lifeDirty) return;
+  if (!lifeDirty || accountLive()) { lifeDirty = false; return; }
   lifeDirty = false;
   try { localStorage.setItem('takeover.lifetimeXp', String(lifetimeXp)); } catch {}
 }
@@ -555,6 +626,7 @@ function renderSkins() {
       if (locked) { sfx('hit'); return; }
       selectedSkin = key;
       try { localStorage.setItem('takeover.skin', key); } catch {}
+      if (accountLive()) Account.setSkin(key);
       sfx('click'); renderSkins(); renderSkinLine();
     };
     grid.append(b);
@@ -588,7 +660,8 @@ function enterMatch(mode) {
   S.rings = []; S.afterimages = []; S.dash = false; S.focus = null; S.focusLocal = 0;
   S.announceQ = []; S.announceUntil = 0; S.burstAt = 0; S.shake = 0; S.shakeAmp = 0; S.kick = { x: 0, y: 0 };
   S.bulletDir = new Map(); S.lastView = null; S.panic = null; S.slices = []; S.meId = null;
-  S.steals = []; S.alarmed = false; S.lastCount = null; S.countLifetime = false;
+  S.steals = []; S.alarmed = false; S.lastCount = null; S.countLifetime = false; S.singleCredited = false;
+  $('savedNote').hidden = true;
   musicStop();
   S.joy.id = null; S.joy.alpha = 0; S.followId = null; if (touchScreen) S.pointer.active = false;
   showRotateHint();
@@ -614,7 +687,8 @@ function startSingle() {
   S.countLifetime = !window.Settings || Settings.isDefault();  // custom games don't unlock skins
   nextRoundMusic();
 }
-function startMulti() {
+const ROOM_RE = /^[A-Z2-9]{5}$/;
+function startMulti(room = 'public') {
   ensureAudio(); sfx('click');
   const name = playerName();
   if (window.Settings) Settings.restore(G);  // multiplayer always uses the server's rules
@@ -638,12 +712,20 @@ function startMulti() {
     ws.onopen = () => {
       if (!live() || S.ws !== ws) { ws.close(); return; }
       opened = true; S.connecting = false;
-      ws.send(JSON.stringify({ t: 'hello', name, cls: selectedClass, skin: effectiveSkin() || undefined }));
+      const hello = { t: 'hello', name, cls: selectedClass, skin: effectiveSkin() || undefined, room };
+      // signed-in or guest accounts send their token so the server can credit the round
+      (window.Account ? Account.token() : Promise.resolve(null)).then((token) => {
+        if (!live() || S.ws !== ws || ws.readyState !== 1) return;
+        if (token && token.length <= 4096) hello.token = token;
+        ws.send(JSON.stringify(hello));
+      });
     };
     ws.onmessage = (ev) => { if (live() && S.ws === ws) onNet(JSON.parse(ev.data)); };
     ws.onclose = () => {
       if (!live() || S.ws !== ws) return;
-      if (S.full) toMenu(FULL_MSG);
+      if (S.netError === 'not_found') toMenu('Room not found. Check the code, or create a new room.');
+      else if (S.netError === 'full' || (S.full && room !== 'public')) toMenu('This room is full.');
+      else if (S.full) toMenu(FULL_MSG);
       else if (opened) toMenu('Connection lost. Try Single player.');
       else if (Date.now() < deadline) setTimeout(connect, 2000);
       else toMenu('Could not reach the datacenter. Try Single player.');
@@ -656,12 +738,21 @@ function startMulti() {
     toMenu('Could not reach the datacenter. Try Single player.');
     if (ws) { ws.onclose = null; ws.close(); }
   }, 90000);
-  S.full = false;
+  S.full = false; S.netError = null; S.roomCode = null;
   connect();
 }
 function onNet(m) {
   if (m.t === 'full') { S.full = true; return; }
-  if (m.t === 'welcome') { S.meId = m.id; applyPk({ add: m.packets, del: [] }); nextRoundMusic(); return; }
+  if (m.t === 'error') { S.netError = m.reason; return; }
+  if (m.t === 'credited') { savedNote(m.xp > 0 ? `+${m.xp} XP saved to your account` : ''); if (window.Account) Account.refresh(); return; }
+  if (m.t === 'welcome') {
+    S.meId = m.id; applyPk({ add: m.packets, del: [] }); nextRoundMusic();
+    S.roomCode = m.code && ROOM_RE.test(m.code) ? m.code : null;
+    const chip = $('roomChip');
+    chip.hidden = !S.roomCode;
+    if (S.roomCode) chip.textContent = `Room ${S.roomCode} · share`;
+    return;
+  }
   if (m.t !== 'snap') return;
   applyPk(m.pk);
   m.time = performance.now();
@@ -671,9 +762,11 @@ function onNet(m) {
   handleEvents(m.events);
 }
 function toMenu(message) {
+  if (S.mode === 'single' && S.game && S.game.phase === 'play') creditSingleRound(true);
   const ws = S.ws;
   S.sid++;
   S.mode = null; S.ws = null; S.game = null; S.cur = null; S.connecting = false; S.panic = null;
+  $('roomChip').hidden = true;
   if (window.TakeoverFX) TakeoverFX.stop();
   S.inTakeover = false; document.body.classList.remove('inTakeover'); $('takeover').classList.remove('sr');
   if (ws) { ws.onclose = null; ws.close(); }
@@ -684,6 +777,151 @@ function toMenu(message) {
   $('menuMsg').textContent = message || '';
   saveLifetime(); renderSkinLine(); menuMusic();
 }
+// ---------- accounts (account.js): menu line, Account panel, Profile & leaderboards, crediting ----------
+const serverHttp = () => (WS_URL || `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}`).replace(/^ws/, 'http');
+function savedNote(text, secs = 6) {
+  const el = $('savedNote');
+  el.textContent = text; el.hidden = !text;
+  clearTimeout(savedNote.t); if (text) savedNote.t = setTimeout(() => { el.hidden = true; }, secs * 1000);
+}
+// Single player runs in the browser, so the account credit is capped server-side (600 per match, 1500 per day).
+function creditSingleRound(leaving) {
+  if (!accountLive() || S.singleCredited || !S.countLifetime || !S.game) return;
+  const ai = S.game.ais.get(S.meId);
+  if (!ai) return;
+  S.singleCredited = true;
+  const r = (!leaving && S.game.results && S.game.results.find((x) => x.id === ai.id)) ||
+    { earned: ai.earned, deletions: ai.kills, deaths: ai.deaths, placement: (S.cur && S.cur.me && S.cur.me.rank) || null, takeover: false };
+  if (!r.earned) return;
+  Account.creditSingle({ xp: r.earned, deletions: r.deletions, deaths: r.deaths, placement: r.placement, takeover: r.takeover }).then((d) => {
+    if (!d) return;
+    const text = d.credited > 0 ? `+${d.credited} XP saved to your account` : '';
+    const limited = d.reason !== 'too_soon' && d.credited < r.earned;
+    const note = limited ? `${text}${text ? ' · ' : ''}single-player daily limit reached` : text;
+    if (leaving) $('menuMsg').textContent = note; else savedNote(note);
+  });
+}
+let accountSkinLoaded = false;
+function syncFromAccount(st) {
+  if (st.ready && st.progression) {
+    lifetimeXp = Number(st.progression.lifetime_xp) || 0; lifeDirty = false;
+    if (!accountSkinLoaded && st.profile) {
+      accountSkinLoaded = true;
+      if (st.profile.selected_skin) { selectedSkin = st.profile.selected_skin; try { localStorage.setItem('takeover.skin', selectedSkin); } catch {} }
+      else if (selectedSkin) Account.setSkin(selectedSkin);
+    }
+    if (st.profile && !$('name').value) $('name').value = st.profile.display_name;  // the account name is the default nickname
+  }
+  renderAcctLine(); renderSkinLine();
+  if (!$('acctModal').hidden) renderAccount();
+  if (!$('profModal').hidden) renderProfile();
+}
+function renderAcctLine() {
+  const st = window.Account ? Account.state : { configured: false };
+  const btn = $('acctBtn'), prof = $('profBtn'), note = $('acctNote');
+  btn.hidden = prof.hidden = !(st.ready); note.textContent = '';
+  if (!st.configured) { note.textContent = 'Accounts unavailable · progress is saved on this device only'; return; }
+  if (!st.ready) { note.textContent = st.offline ? 'Progress is not being saved right now (account service unreachable)' : 'Connecting your account…'; return; }
+  const xp = Number(st.progression && st.progression.lifetime_xp) || 0;
+  const name = (st.profile && st.profile.display_name) || 'Guest';
+  btn.textContent = st.isGuest ? `Guest · Lv ${st.level} · ${xp} XP · Save your progress` : `${name} · Lv ${st.level} · ${xp} XP`;
+  btn.classList.toggle('save', st.isGuest);
+}
+let acctMode = 'upgrade';  // 'upgrade' links an identity to this guest; 'signin' switches to an existing account
+let acctPending = null;    // a confirmed-needed switch waiting for the warning button
+function acctMsg(text) { $('acctMsg').textContent = text || ''; }
+function renderAccount() {
+  const st = Account.state;
+  const who = st.isGuest ? 'Guest account (progress saved on this device)' : `Signed in${st.email ? ' as ' + st.email : ''}${st.providers.length ? ' with ' + st.providers.filter((p) => p !== 'email').join(', ') : ''}`;
+  $('acctStatus').textContent = `${who} · Lv ${st.level} · ${Number(st.progression && st.progression.lifetime_xp) || 0} lifetime XP`;
+  $('acctUpgrade').hidden = !st.isGuest && acctMode === 'upgrade';
+  $('acctUpTitle').textContent = acctMode === 'upgrade' ? 'Save your progress' : 'Sign in to an existing account';
+  $('acctMode').textContent = acctMode === 'upgrade' ? 'Already have an account? Sign in instead' : 'Back: save this guest\'s progress instead';
+  $('acctSignOutLine').querySelector('#acctSignOut').hidden = st.isGuest;
+  if (document.activeElement !== $('acctName')) $('acctName').value = (st.profile && st.profile.display_name) || '';
+}
+async function acctStartProvider(provider) {
+  acctMsg('');
+  const r = acctMode === 'upgrade' ? await Account.upgrade(provider) : await Account.signInExisting(provider, { confirmed: !!acctPending });
+  if (r && r.needsConfirm) { acctPending = { provider }; $('acctConfirmText').textContent = `Your guest progress (${r.xp} XP) will not be carried over.`; $('acctConfirm').hidden = false; return; }
+  if (r && r.error) acctMsg(r.error);
+}
+async function acctSendEmail() {
+  const email = $('acctEmail').value.trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { acctMsg('Enter a valid email.'); return; }
+  const r = acctMode === 'upgrade' ? await Account.emailStart(email, 'upgrade') : await Account.signInExisting('email', { email, confirmed: !!acctPending });
+  if (r && r.needsConfirm) { acctPending = { email }; $('acctConfirmText').textContent = `Your guest progress (${r.xp} XP) will not be carried over.`; $('acctConfirm').hidden = false; return; }
+  if (r && r.error) { acctMsg(r.error); return; }
+  $('acctCodeLine').hidden = false; acctMsg(`We sent a 6-digit code to ${email}.`);
+}
+function openAccount() { acctMode = 'upgrade'; acctPending = null; $('acctConfirm').hidden = true; $('acctCodeLine').hidden = true; acctMsg(''); renderAccount(); $('acctModal').hidden = false; }
+$('acctBtn').onclick = () => { ensureAudio(); sfx('click'); openAccount(); };
+$('acctClose').onclick = () => { $('acctModal').hidden = true; };
+$('acctApple').onclick = () => acctStartProvider('apple');
+$('acctGoogle').onclick = () => acctStartProvider('google');
+$('acctEmailSend').onclick = acctSendEmail;
+$('acctCodeOk').onclick = async () => {
+  const r = await Account.emailVerify($('acctEmail').value.trim(), $('acctCode').value, acctMode === 'upgrade' ? 'upgrade' : 'signin');
+  if (r.error) { acctMsg(r.error); return; }
+  $('acctCodeLine').hidden = true; acctMsg(acctMode === 'upgrade' ? 'Progress saved to your email account.' : 'Signed in.'); acctMode = 'upgrade'; renderAccount();
+};
+$('acctMode').onclick = (e) => { e.preventDefault(); acctMode = acctMode === 'upgrade' ? 'signin' : 'upgrade'; acctPending = null; $('acctConfirm').hidden = true; renderAccount(); };
+$('acctConfirmOk').onclick = () => { const p = acctPending; $('acctConfirm').hidden = true; if (!p) return; if (p.provider) acctStartProvider(p.provider); else acctSendEmail(); };
+$('acctNameOk').onclick = async () => {
+  const r = await Account.setName($('acctName').value);
+  if (r.error) { acctMsg(r.error); return; }
+  $('name').value = r.name; acctMsg('Name saved.'); renderAcctLine();
+};
+$('acctSignOut').onclick = async () => { await Account.signOut(); accountSkinLoaded = false; acctMsg('Signed out. This device now has a new guest account.'); renderAccount(); };
+$('acctDelInput').addEventListener('input', () => { $('acctDelOk').disabled = $('acctDelInput').value !== 'DELETE'; });
+$('acctDelOk').onclick = async () => {
+  if ($('acctDelInput').value !== 'DELETE') return;
+  $('acctDelOk').disabled = true;
+  const r = await Account.deleteAccount(serverHttp());
+  $('acctDelInput').value = '';
+  acctMsg(r.error || 'Account deleted. This device now has a new guest account.');
+  accountSkinLoaded = false; renderAccount();
+};
+for (const el of [$('acctName'), $('acctEmail'), $('acctCode'), $('acctDelInput')]) el.addEventListener('keydown', (e) => e.stopPropagation());
+// Profile & leaderboards
+let lbPeriod = 'all';
+async function renderProfile() {
+  const st = Account.state, pg = st.progression || {};
+  $('profTitle').textContent = (st.profile && st.profile.display_name) || 'Profile';
+  const xp = Number(pg.lifetime_xp) || 0, nextLv = st.level, need = 100 * nextLv * nextLv;
+  $('profLevel').textContent = `Lv ${st.level} · ${xp} lifetime XP · ${Math.max(0, need - xp)} XP to Lv ${nextLv + 1}`;
+  const stats = $('profStats'); stats.textContent = '';
+  for (const [label, v] of [['Games', pg.games], ['Takeovers', pg.takeovers], ['Deletions', pg.deletions], ['Deleted', pg.deaths], ['Best round', pg.best_round_xp], ['Level', st.level]]) {
+    const d = document.createElement('div'); const b = document.createElement('b'); b.textContent = v || 0; d.append(b, label); stats.append(d);
+  }
+  const [hist, board] = await Promise.all([Account.history(), Account.leaderboard(lbPeriod)]);
+  const hl = $('profHistory'); hl.textContent = '';
+  if (!hist.length) { const li = document.createElement('li'); li.textContent = 'No saved matches yet.'; hl.append(li); }
+  for (const m of hist) {
+    const li = document.createElement('li');
+    const a = document.createElement('span'); a.textContent = `${m.mode === 'multi' ? 'Online' : 'Single'}${m.takeover ? ' · TAKEOVER' : m.placement ? ' · #' + m.placement : ''}`;
+    const b = document.createElement('span'); b.textContent = `+${m.xp} XP · ${m.deletions} del · ${new Date(m.created_at).toLocaleDateString()}`;
+    li.append(a, b); hl.append(li);
+  }
+  const bl = $('profBoard'); bl.textContent = '';
+  if (!board.length) { const li = document.createElement('li'); li.textContent = 'Nobody on this board yet.'; bl.append(li); }
+  for (const row of board) {
+    const li = document.createElement('li'); if (row.is_me) li.className = 'me';
+    const a = document.createElement('span'); a.textContent = `${row.rank}. ${row.display_name}`;
+    const b = document.createElement('span'); b.textContent = `${row.xp} XP`;
+    li.append(a, b); bl.append(li);
+  }
+}
+$('profBtn').onclick = () => { ensureAudio(); sfx('click'); $('profModal').hidden = false; Account.refresh(); renderProfile(); };
+$('profClose').onclick = () => { $('profModal').hidden = true; };
+$('lbAll').onclick = () => { lbPeriod = 'all'; $('lbAll').classList.add('on'); $('lbWeek').classList.remove('on'); renderProfile(); };
+$('lbWeek').onclick = () => { lbPeriod = 'week'; $('lbWeek').classList.add('on'); $('lbAll').classList.remove('on'); renderProfile(); };
+for (const id of ['acctModal', 'profModal']) $(id).addEventListener('pointerdown', (e) => { if (e.target === $(id)) $(id).hidden = true; });
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  for (const id of ['acctModal', 'profModal']) if (!$(id).hidden) { $(id).hidden = true; e.stopPropagation(); }
+}, true);
+if (window.Account) { Account.onChange(syncFromAccount); Account.init(); } else renderAcctLine();
 const firstRun = (start) => () => (window.Controls ? Controls.showFirstRun(start) : start());
 // Single-player difficulty (easy / medium / tryhard), remembered in the browser.
 let difficulty = 'medium';
@@ -709,7 +947,24 @@ $('sfxVol').oninput = () => { audio.sfxVol = $('sfxVol').value / 100; saveAudio(
 $('sfxVol').onchange = () => sfx('collect');  // preview the new effects volume
 paintAudio();
 $('singleBtn').onclick = firstRun(startSingle);
-$('multiBtn').onclick = firstRun(startMulti);
+// Rooms: Play online matchmakes; Create room gets a private code; Join uses a typed code or a ?room= link.
+const linkRoom = (() => { const c = (new URLSearchParams(location.search).get('room') || '').toUpperCase(); return ROOM_RE.test(c) ? c : null; })();
+if (linkRoom) { $('roomCode').value = linkRoom; $('multiBtn').textContent = `Join room ${linkRoom}`; }
+$('multiBtn').onclick = firstRun(() => startMulti(linkRoom || 'public'));
+$('createRoomBtn').onclick = firstRun(() => startMulti('new'));
+$('roomCode').addEventListener('input', () => { $('roomCode').value = $('roomCode').value.toUpperCase().replace(/[^A-Z2-9]/g, ''); });
+$('roomCode').addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') $('joinRoomBtn').click(); });
+$('joinRoomBtn').onclick = () => {
+  const code = $('roomCode').value;
+  if (!ROOM_RE.test(code)) { $('menuMsg').textContent = 'Room codes have 5 letters or digits.'; return; }
+  firstRun(() => startMulti(code))();
+};
+$('roomChip').onclick = async () => {
+  if (!S.roomCode) return;
+  const link = `${location.origin}${location.pathname}?room=${S.roomCode}`;
+  try { if (navigator.share) { await navigator.share({ title: 'takeover.io', text: `Join my room ${S.roomCode}`, url: link }); return; } } catch { return; }
+  try { await navigator.clipboard.writeText(link); showMsg('Room link copied', 1.5); } catch { showMsg(link, 4); }
+};
 $('controlsBtn').onclick = () => { sfx('click'); if (window.Controls) Controls.openModal({ onClose: renderHelp }); };
 $('customBtn').onclick = () => { sfx('click'); if (window.Settings) Settings.openPanel({ onClose: renderHelp }); };
 function renderHelp() {
@@ -1137,8 +1392,8 @@ function handleEvents(events) {
         break;
       }
       case 'feed': S.feed.unshift({ text: ev.text, t: performance.now() }); S.feed.length = Math.min(S.feed.length, 4); break;
-      case 'takeover': sfx('takeover'); break;
-      case 'round': sfx('go'); nextRoundMusic(); break;
+      case 'takeover': sfx('takeover'); if (S.mode === 'single') creditSingleRound(false); break;
+      case 'round': sfx('go'); nextRoundMusic(); S.singleCredited = false; break;
     }
   }
 }

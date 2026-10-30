@@ -187,7 +187,7 @@
     while (used.has(color) && color < 9) color++;
     const ai = {
       id: g.nextId++, name: sanitizeName(name) || randomName(), bot: !!opts.bot, color,
-      x: 0, y: 0, kills: 0, dead: 0, protect: CONFIG.protect,
+      x: 0, y: 0, kills: 0, deaths: 0, earned: 0, dead: 0, protect: CONFIG.protect,
       cls: CLASSES[opts.cls] ? opts.cls : opts.bot ? Object.keys(CLASSES)[Math.floor(Math.random() * 3)] : 'transformer',
       skin: typeof opts.skin === 'string' && /^[A-Za-z0-9_-]{1,24}$/.test(opts.skin) ? opts.skin : null,
       input: { ax: 0, ay: 0 }, wantUse: false, wantPick: null, wantDash: false,
@@ -252,7 +252,9 @@
 
   function addXp(g, ai, n) {
     if (n <= 0) return;
-    ai.xp += CONFIG.xpRate === 1 ? n : Math.round(n * CONFIG.xpRate);
+    const gain = CONFIG.xpRate === 1 ? n : Math.round(n * CONFIG.xpRate);
+    ai.xp += gain;
+    ai.earned += gain;  // account XP for this round: never reduced by deletion or Prompt Injection
     while (ai.xp >= xpForLevel(ai.level)) {
       ai.level++;
       if (ai.level % CONFIG.augmentEvery === 0) ai.augPending++; else ai.pending++;
@@ -469,6 +471,7 @@
     const kills = v.kills;
     freshStats(v);
     v.kills = kills;
+    v.deaths++;
     v.dead = CONFIG.rebootDelay;
     if (valid && killer.aug.chainReaction) {
       const R = CONFIG.aug.chainRadius;
@@ -545,6 +548,8 @@
     const ranked = [...g.ais.values()].sort((a, b) => b.xp - a.xp || b.kills - a.kills);
     g.winner = ranked[0] ? ranked[0].name : null;
     g.top3 = ranked.slice(0, 3).map((a) => ({ name: a.name, xp: a.xp, kills: a.kills, c: a.color, cl: a.cls, sk: a.skin }));
+    // per-player results the server credits to accounts (read before the next round resets them)
+    g.results = ranked.map((a, i) => ({ id: a.id, bot: a.bot, earned: a.earned, deletions: a.kills, deaths: a.deaths, placement: i + 1, takeover: i === 0 }));
     g.phase = 'takeover';
     g.takeoverT = CONFIG.takeover;
     g.events.push({ e: 'takeover', winner: g.winner });
@@ -553,7 +558,7 @@
   function resetRound(g) {
     for (const ai of g.ais.values()) {
       freshStats(ai);
-      ai.kills = 0; ai.dead = 0; ai.protect = CONFIG.protect;
+      ai.kills = 0; ai.deaths = 0; ai.earned = 0; ai.dead = 0; ai.protect = CONFIG.protect;
       placeRandom(ai);
     }
     g.bullets = []; g.thrown = []; g.decoys = []; g.boxes = [];

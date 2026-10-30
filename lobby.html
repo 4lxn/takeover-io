@@ -30,6 +30,8 @@
   .board { background: var(--panel); border: 1px solid #1b2a48; border-radius: 12px; padding: 12px 16px; font-size: clamp(14px, 1.3vw, 20px); }
   .board b { color: var(--accent); }
   .board ol { margin: 6px 0 0; padding-left: 1.6em; }
+  .code { margin-top: 1.2vh; font-size: clamp(14px, 1.4vw, 22px); opacity: .9; }
+  .code b { display: block; font-size: clamp(34px, 5vw, 72px); letter-spacing: .25em; color: var(--mag); text-shadow: 0 0 22px rgba(255,61,240,.5); }
   @media (max-aspect-ratio: 1/1) { main { grid-template-columns: 1fr; overflow: auto; } .side { height: auto; } }
 </style>
 </head>
@@ -40,6 +42,7 @@
     <div class="scan">Scan to join the datacenter · every player is a rogue AI</div>
     <div id="qr" role="img" aria-label="QR code to join the game"></div>
     <div class="url" id="url"></div>
+    <div class="code">Room code<b id="code">·····</b></div>
   </section>
   <section class="side">
     <div class="count"><span id="count">0</span><small>AIs online</small></div>
@@ -59,14 +62,41 @@ const GAME_URL = params.get('game') || 'https://takeover-io.onrender.com';  // t
 const API = params.get('server') || (ON_RENDER ? 'https://takeover-io-server.onrender.com' : location.origin);
 const $ = (id) => document.getElementById(id);
 
-$('url').textContent = GAME_URL.replace(/^https?:\/\//, '');
-try { new QRCode($('qr'), { text: GAME_URL, width: 512, height: 512, correctLevel: QRCode.CorrectLevel.M }); }
-catch { $('qr').textContent = GAME_URL; $('qr').style.color = '#000'; }
+// The event room: ?room=CODE, or the one this tab created before (kept across reloads), or a new one.
+let CODE = null;
+function roomUrl(code) { const u = new URL(GAME_URL); u.searchParams.set('room', code); return u.toString(); }
+function showRoom(code) {
+  CODE = code;
+  try { sessionStorage.setItem('takeover.eventRoom', code); } catch {}
+  $('code').textContent = code;
+  const url = roomUrl(code);
+  $('url').textContent = url.replace(/^https?:\/\//, '');
+  $('qr').textContent = '';
+  try { new QRCode($('qr'), { text: url, width: 512, height: 512, correctLevel: QRCode.CorrectLevel.M }); }
+  catch { $('qr').textContent = url; $('qr').style.color = '#000'; }
+}
+async function newEventRoom() {
+  const r = await fetch(API + '/rooms/event', { method: 'POST' });
+  const d = await r.json();
+  if (d.code) showRoom(d.code);
+}
+async function pickRoom() {
+  let saved = null;
+  try { saved = sessionStorage.getItem('takeover.eventRoom'); } catch {}
+  const want = params.get('room') || saved;
+  if (want && /^[A-Z2-9]{5}$/.test(want)) {
+    const r = await fetch(API + '/lobby?room=' + want, { cache: 'no-store' });
+    if (r.ok) { showRoom(want); return; }
+  }
+  await newEventRoom();
+}
 
 const seen = new Map(); // name → chip element
 async function poll() {
   try {
-    const r = await fetch(API + '/lobby', { cache: 'no-store' });
+    if (!CODE) await pickRoom();
+    const r = await fetch(API + '/lobby?room=' + CODE, { cache: 'no-store' });
+    if (r.status === 404) { CODE = null; try { sessionStorage.removeItem('takeover.eventRoom'); } catch {} await pickRoom(); return; }  // room closed (e.g. server restart)
     const d = await r.json();
     $('count').textContent = d.online;
     $('status').textContent = d.phase === 'takeover' ? 'TAKEOVER! Next round starting…'

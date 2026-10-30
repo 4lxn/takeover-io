@@ -271,3 +271,21 @@ test('11.1 single-player difficulty changes the bots', () => {
   G.step(hard, DT);
   assert.ok(hb.aug.moe || hb.choices.length === 0);
 });
+
+test('12.1 earned XP survives deletion and Prompt Injection; round results carry it', () => {
+  const [g, a, b] = setup(2);
+  G._.addXp(g, a, 50);
+  G._.landThrown(g, { item: 'promptInjection' }, b, a);
+  assert.strictEqual(a.earned, 50);
+  G._.deleteAI(g, a, b);
+  assert.strictEqual(a.xp, 0);
+  assert.strictEqual(a.earned, 50);
+  assert.strictEqual(a.deaths, 1);
+  g.roundT = 0.01; G.step(g, DT);
+  const r = g.results.find((x) => x.id === a.id);
+  assert.strictEqual(r.earned, 50);
+  assert.strictEqual(r.deaths, 1);
+  assert.ok(g.results.find((x) => x.id === b.id).takeover);
+  g.takeoverT = 0.01; G.step(g, DT);
+  assert.strictEqual(a.earned, 0);
+});

@@ -6,12 +6,16 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "test": "node --test"
+    "test": "node --test",
+    "config": "node scripts/write-config.js",
+    "prestart": "node scripts/write-config.js",
+    "predev": "node scripts/write-config.js"
   },
   "engines": {
     "node": ">=20"
   },
   "dependencies": {
+    "jose": "6.2.14",
     "ws": "^8.22.0"
   }
 }

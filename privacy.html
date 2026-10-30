@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>takeover.io · Privacy</title>
+<style>
+  :root { --bg: #070a12; --text: #d8e6ff; --accent: #3df2ff; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.6 ui-monospace, Menlo, Consolas, monospace; }
+  main { max-width: 760px; margin: 0 auto; padding: 32px 20px 64px; }
+  h1 { color: var(--accent); margin: 0 0 4px; }
+  h2 { color: var(--accent); font-size: 18px; margin-top: 32px; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  td, th { border-bottom: 1px solid #1b2a48; padding: 8px 6px; text-align: left; vertical-align: top; }
+  a { color: var(--accent); }
+  .muted { opacity: .7; font-size: 14px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Privacy</h1>
+  <p class="muted">takeover.io · last updated October 29, 2026</p>
+
+  <p>takeover.io is a browser game. We store only what we need to save your progress and run multiplayer matches. We don't sell your data and we don't show you targeted ads.</p>
+
+  <h2>What we store</h2>
+  <table>
+    <tr><th>Data</th><th>Why</th><th>Kept for</th></tr>
+    <tr><td>An account id (a random identifier), created automatically the first time you play</td><td>To save your progress without asking you to sign up</td><td>Until you delete the account; guest accounts idle for 90 days with under 100 XP are removed</td></tr>
+    <tr><td>Your email, or your Apple or Google account identifier, if you choose to sign in with one</td><td>So you can sign in and keep your progress on other devices</td><td>Until you delete the account</td></tr>
+    <tr><td>Your display name</td><td>Shown in matches and on leaderboards</td><td>Until you change it or delete the account</td></tr>
+    <tr><td>Progress and stats: lifetime XP, level, skins, games, round wins, deletions, best round</td><td>The game's progression and your profile</td><td>Until you delete the account</td></tr>
+    <tr><td>Match history: mode, XP, placement and time of each match</td><td>Your recent matches and the weekly leaderboard</td><td>Until you delete the account</td></tr>
+  </table>
+  <p>While you play online, the game server sees your connection and your in-game actions in order to run the match. It does not keep them after the match.</p>
+  <p>Settings such as sound, controls and difficulty are stored only in your browser.</p>
+
+  <h2>Who processes it</h2>
+  <p>Accounts and progress are stored with <a href="https://supabase.com" rel="noopener">Supabase</a>, and the game runs on <a href="https://render.com" rel="noopener">Render</a>. If you sign in with Apple or Google, they confirm your identity to us; we receive only what's needed to sign you in.</p>
+
+  <h2>Leaderboards</h2>
+  <p>Leaderboards show your display name and XP to other players. Nothing else about you is public.</p>
+
+  <h2>Deleting your data</h2>
+  <p>Open the game, then go to <b>Account → Delete account</b> and confirm. This permanently removes your account, profile, progress and match history. You disappear from the leaderboards right away.</p>
+
+  <h2>Children</h2>
+  <p>takeover.io is not directed at children under 13, and we don't knowingly collect their data.</p>
+
+  <h2>Contact</h2>
+  <p id="contact">Questions about your data: <a href="https://github.com/4lxn/takeover-io/issues">open an issue on GitHub</a>.</p>
+
+  <p class="muted"><a href="./">← Back to the game</a></p>
+</main>
+</body>
+</html>
