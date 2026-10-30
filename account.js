@@ -165,7 +165,7 @@
   }
 
   // Deletion goes through the game server, which holds the admin key (an App Store requirement).
-  async function deleteAccount(httpBase) {
+  async function deleteAccount(httpBase = typeof serverHttp === 'function' ? serverHttp() : location.origin) {
     const t = await token();
     if (!t) return { error: 'Not signed in.' };
     try {

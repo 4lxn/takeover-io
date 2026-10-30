@@ -50,7 +50,9 @@ async function rest(pathname, init = {}) {
   const res = await fetch(`${URL_}${pathname}`, {
     ...init,
     signal: AbortSignal.timeout(TIMEOUT),
-    headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json', ...(init.headers || {}) },
+    // new-style secret keys (sb_secret_…) go only in `apikey`; legacy service_role JWTs also as a bearer token
+    headers: { apikey: SERVICE_KEY, ...(SERVICE_KEY.startsWith('sb_secret_') ? {} : { Authorization: `Bearer ${SERVICE_KEY}` }),
+      'Content-Type': 'application/json', ...(init.headers || {}) },
   });
   if (!res.ok) throw new Error(`${pathname} ${res.status}`);
   const text = await res.text();
