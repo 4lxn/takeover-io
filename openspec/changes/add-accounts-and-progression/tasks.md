@@ -5,7 +5,7 @@ Steps marked **(user)** need Alan: accounts and keys only he can create. Secrets
 ## 1. Services and setup
 
 - [x] 1.1 **(user)** Create the Supabase project and enable the Anonymous and Email (OTP code) providers; put `SUPABASE_URL`, `SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` in a local `.env`; verify `curl $SUPABASE_URL/auth/v1/settings` lists anonymous and email as enabled
-- [ ] 1.2 **(user, guided)** Create the Google OAuth client and the Apple Services ID and key, and enable both providers in Supabase with the game's redirect URLs; verify both show as enabled in `/auth/v1/settings`
+- [x] 1.2 **(user, guided)** Create the Google OAuth client and the Apple Services ID and key, and enable both providers in Supabase with the game's redirect URLs; verify both show as enabled in `/auth/v1/settings`
 - [x] 1.3 Add `jose` to `package.json`, vendor the pinned `@supabase/supabase-js` UMD build as `vendor/supabase.js`, add `.env.example`, generate `config.js` (from `.env` locally and in the static-site build), and serve `vendor/supabase.js` and `config.js` from `server.js`; verify `npm install` succeeds and the page loads both files with no console errors
 
 ## 2. Database

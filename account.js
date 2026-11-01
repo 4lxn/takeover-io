@@ -47,11 +47,16 @@
   // Progress the earlier version kept in localStorage is imported once per account (capped server-side).
   async function importLocalOnce() {
     if (!state.progression || state.progression.imported_local) return 0;
+    // once per DEVICE (spec): after the first import, other accounts on this device don't get the same local XP again
     let local = 0;
-    try { local = Math.max(0, parseInt(localStorage.getItem('takeover.lifetimeXp'), 10) || 0); } catch (e) { /* no storage */ }
+    try {
+      if (localStorage.getItem('takeover.localImported') === '1') return 0;
+      local = Math.max(0, parseInt(localStorage.getItem('takeover.lifetimeXp'), 10) || 0);
+    } catch (e) { /* no storage */ }
     if (!local) return 0;
     const { data, error } = await sb.rpc('import_local_progress', { p_xp: local });
     if (error) return 0;
+    try { localStorage.setItem('takeover.localImported', '1'); localStorage.removeItem('takeover.lifetimeXp'); } catch (e) { /* no storage */ }
     await load();
     return data || 0;
   }
